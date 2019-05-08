@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using Library.Extensions;
 using UnityEditor;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
@@ -11,7 +13,52 @@ namespace Excel
 {
     public class ExcelWindow : EditorWindow
     {
-        [MenuItem("Tools/ExcelTools/ExcelExport")]
+
+        [MenuItem("Tools/ExcelTools/ExportExcel2")]
+        private static void ExportExcel()
+        {
+            if (!Directory.Exists(ExcelPath))
+                Directory.CreateDirectory(ExcelPath);
+
+            var files = Directory.GetFiles(ExcelPath, "*.*", SearchOption.TopDirectoryOnly)
+                .Where(p => p.EndsWith(".xlsx") || p.EndsWith(".xls"))
+                .Select(p => new
+                {
+                    path = p,
+                    name = Path.GetFileNameWithoutExtension(p),
+                    list = Path.GetFileNameWithoutExtension(p).Split('#')
+                })
+                .Where(p => !p.name.StartsWith("."))
+                .ToLookup(p => p.list.First())
+                .ToDictionary(p => p.Key, p => p.ToList().Select(q => q.path).ToArray());
+
+
+            Debug.Log(files.Join("\n"));
+            Debug.Log(JsonHelper.ToJson(files));
+
+            string csPath = EditorUtils.DataPath + ClassPath;
+            if (!Directory.Exists(csPath))
+                Directory.CreateDirectory(csPath);
+            foreach (KeyValuePair<string, string[]> pair in files)
+            {
+                foreach (string excelFullPath in pair.Value)
+                {
+                    string classInfoName = pair.Key.Replace("Table", "Info");
+                    string classTableName = pair.Key;
+                    EditorExcelTools.CreateClass(excelFullPath, classInfoName, classTableName,
+                        string.Format(csPath + "{0}.cs", classTableName));
+
+                    string path = EditorUtils.DataPath + excelFullPath;
+                    string savePath = EditorUtils.DataPath + TablePath;
+                    Debug.Log(path + "\n" + savePath);
+                    EditorExcelTools.ExportTo(_tableType, excelFullPath, new[] {savePath});
+                }
+            }
+
+            AssetDatabase.Refresh();
+        }
+
+        [MenuItem("Tools/ExcelTools/Window")]
         private static void ShowWindow()
         {
             GetWindow<ExcelWindow>(false, "ExcelWindow", true);
@@ -370,7 +417,8 @@ namespace Excel
             {
                 Directory.CreateDirectory(csPath);
             }
-            EditorExcelTools.CreateClass(excelInfo, string.Format(csPath + "{0}.cs", excelInfo.classTableName));
+            EditorExcelTools.CreateClass(excelInfo.excelFullPath, excelInfo.classInfoName, excelInfo.classTableName,
+                string.Format(csPath + "{0}.cs", excelInfo.classTableName));
         }
 
         public static void ExportTable(ExcelInfo excelInfo)

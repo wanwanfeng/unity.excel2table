@@ -128,7 +128,7 @@ namespace Excel
                 {
                     type = type.Replace("[]", "").Replace("list<", "").Replace(">", "");
                     writer.WriteArrayStart();
-                    string[] array = value.AsStringArray('|');
+                    string[] array = value.ToStringArray('|');
                     for (var i = 0; i < array.Length; i++)
                     {
                         writer.Write(array[i], type);
@@ -486,11 +486,10 @@ namespace Excel
 
         #region  写入为Asset
 
-        internal static void ToAsset(string savePath, Dictionary<int, List<Cell>> dic)
+        internal static void ToAsset(string savePath, Dictionary<int, List<Cell>> dic, string tableName = null)
         {
-            string tableName = new FileInfo(savePath).Name.Replace(".asset", "");
-            ScriptableObject table = EditorUtils.CreateAsset<ScriptableObject>(tableName,
-                savePath.Replace(EditorUtils.DataPath, ""));
+            string className = tableName ?? new FileInfo(savePath).Name.Replace(".asset", "");
+            ScriptableObject table = EditorUtils.CreateAsset<ScriptableObject>(className, savePath.Replace(EditorUtils.DataPath, ""));
 
             IDataCollection db = table as IDataCollection;
             if (db == null) return;

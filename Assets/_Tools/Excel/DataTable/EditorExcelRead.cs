@@ -57,35 +57,35 @@ namespace Excel
                 }
                 else if (type == typeof (bool[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsBoolArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToBoolArray('|'));
                 }
                 else if (type == typeof (int[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsIntArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToIntArray('|'));
                 }
                 else if (type == typeof (float[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsFloatArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToFloatArray('|'));
                 }
                 else if (type == typeof (double[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsDoubleArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToDoubleArray('|'));
                 }
                 else if (type == typeof (long[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsLongArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToLongArray('|'));
                 }
                 else if (type == typeof (decimal[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsDecimalArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToDecimalArray('|'));
                 }
                 else if (type == typeof (byte[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsByteArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToBoolArray('|'));
                 }
                 else if (type == typeof (short[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsShortArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToShortArray('|'));
                 }
                 else if (type == typeof (char[]))
                 {
@@ -93,39 +93,39 @@ namespace Excel
                 }
                 else if (type == typeof (string[]))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray());
+                    fileInfo.SetValue(obj, value.ReadString().ToStringArray());
                 }
                 else if (type == typeof (List<bool>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsBoolArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToBoolList('|'));
                 }
                 else if (type == typeof (List<int>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsIntArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToIntList('|'));
                 }
                 else if (type == typeof (List<float>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsFloatArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToFloatList('|'));
                 }
                 else if (type == typeof (List<double>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsDoubleArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToDoubleList('|'));
                 }
                 else if (type == typeof (List<long>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsLongArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToLongList('|'));
                 }
                 else if (type == typeof (List<decimal>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsDecimalArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToDecimalList('|'));
                 }
                 else if (type == typeof (List<byte>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsByteArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToBoolList('|'));
                 }
                 else if (type == typeof (List<short>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray('|').AsShortArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToShortList('|'));
                 }
                 else if (type == typeof (List<char>))
                 {
@@ -133,7 +133,7 @@ namespace Excel
                 }
                 else if (type == typeof (List<string>))
                 {
-                    fileInfo.SetValue(obj, value.ReadString().AsStringArray().ToList());
+                    fileInfo.SetValue(obj, value.ReadString().ToStringArray().ToList());
                 }
                 else
                 {
@@ -245,35 +245,35 @@ namespace Excel
             }
             else if (type == typeof (bool[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsBoolArray());
+                fileInfo.SetValue(obj, value.ToBoolArray('|'));
             }
             else if (type == typeof (int[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsIntArray());
+                fileInfo.SetValue(obj, value.ToIntArray('|'));
             }
             else if (type == typeof (float[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsFloatArray());
+                fileInfo.SetValue(obj, value.ToFloatArray('|'));
             }
             else if (type == typeof (double[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsDoubleArray());
+                fileInfo.SetValue(obj, value.ToDoubleArray('|'));
             }
             else if (type == typeof (long[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsLongArray());
+                fileInfo.SetValue(obj, value.ToLongArray('|'));
             }
             else if (type == typeof (decimal[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsDecimalArray());
+                fileInfo.SetValue(obj, value.ToDecimalArray('|'));
             }
             else if (type == typeof (byte[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsByteArray());
+                fileInfo.SetValue(obj, value.ToByteArray('|'));
             }
             else if (type == typeof (short[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsShortArray());
+                fileInfo.SetValue(obj, value.ToShortArray('|'));
             }
             else if (type == typeof (char[]))
             {
@@ -281,39 +281,39 @@ namespace Excel
             }
             else if (type == typeof (string[]))
             {
-                fileInfo.SetValue(obj, value.AsStringArray());
+                fileInfo.SetValue(obj, value.ToStringArray());
             }
             else if (type == typeof (List<bool>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsBoolArray().ToList());
+                fileInfo.SetValue(obj, value.ToBoolList('|'));
             }
             else if (type == typeof (List<int>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsIntArray().ToList());
+                fileInfo.SetValue(obj, value.ToIntList('|'));
             }
             else if (type == typeof (List<float>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsFloatArray().ToList());
+                fileInfo.SetValue(obj, value.ToFloatList('|'));
             }
             else if (type == typeof (List<double>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsDoubleArray().ToList());
+                fileInfo.SetValue(obj, value.ToDoubleList('|'));
             }
             else if (type == typeof (List<long>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsLongArray().ToList());
+                fileInfo.SetValue(obj, value.ToLongList('|'));
             }
             else if (type == typeof (List<decimal>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsDecimalArray().ToList());
+                fileInfo.SetValue(obj, value.ToDecimalList('|'));
             }
             else if (type == typeof (List<byte>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsByteArray().ToList());
+                fileInfo.SetValue(obj, value.ToByteList('|'));
             }
             else if (type == typeof (List<short>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray('|').AsShortArray().ToList());
+                fileInfo.SetValue(obj, value.ToShortList('|'));
             }
             else if (type == typeof (List<char>))
             {
@@ -321,7 +321,7 @@ namespace Excel
             }
             else if (type == typeof (List<string>))
             {
-                fileInfo.SetValue(obj, value.AsStringArray().ToList());
+                fileInfo.SetValue(obj, value.ToStringArray().ToList());
             }
             else
             {
@@ -419,14 +419,14 @@ namespace Excel
             List<T> list = new List<T>();
             if (string.IsNullOrEmpty(content)) return list;
             string[] results = content.Replace("\r\n", "\n").Split('\n');
-            var fieldList = results[0].AsStringArray();
-            var typeList = results[1].AsStringArray();
+            var fieldList = results[0].ToStringArray();
+            var typeList = results[1].ToStringArray();
             for (var i = 2; i < results.Length; i++)
             {
                 string line = results[i];
                 if (string.IsNullOrEmpty(line))
                     continue;
-                string[] result = line.AsStringArray();
+                string[] result = line.ToStringArray();
                 if (result.Length == 0) continue;
                 T classInstance = new T();
                 for (var j = 0; j < result.Length; j++)
@@ -442,7 +442,6 @@ namespace Excel
         }
 
         #endregion
-
 
         #region 从XmlAttribute读入
 

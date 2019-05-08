@@ -40,28 +40,18 @@ namespace Excel
         /// <summary>
         /// 创建类文件
         /// </summary>
-        /// <param name="info"></param>
+        /// <param name="excelFullPath"></param>
+        /// <param name="classInfoName"></param>
+        /// <param name="classTableName"></param>
         /// <param name="csPath"></param>
-        public static void CreateClass(ExcelInfo info, string csPath)
+        public static void CreateClass(string excelFullPath, string classInfoName, string classTableName, string csPath)
         {
-            var dic = ExportTable(info.excelFullPath, info.sheet);
+            var dic = ExportTable(excelFullPath, 0);
             if (dic == null || dic.Count == 0)
                 return;
 
             string strClass =
-                @"using System;
-using System.ComponentModel;
-using Excel;
-
-[Serializable]
-public partial class {0}
-{3}{2}
-{4}
-
-[Serializable]
-public partial class {1} : DataTable<{5},{0}>
-{3}
-{4}";
+                "using System;\nusing System.ComponentModel;\nusing Excel;\n\n[Serializable]\npublic partial class {0}\n{{{2}\n}}\n\n[Serializable]\npublic partial class {1} : DataTable<{3}, {0}>\n{{\n}}";
             string strField = "\n\t[Description(\"{2}\")]\n\tpublic {0} {1};";
             string fields = "";
             string keyType = "";
@@ -74,8 +64,7 @@ public partial class {1} : DataTable<{5},{0}>
                 fields += string.Format(strField, cell.type, cell.name, cell.remark.Replace("\n", ""));
             }
             Debug.Log(csPath + "\n" + fields);
-            string content = string.Format(strClass, info.classInfoName, info.classTableName, fields,
-                "{", "}", keyType);
+            string content = string.Format(strClass, classInfoName, classTableName, fields, keyType);
             Debug.Log(csPath + "\n" + content);
             File.WriteAllText(csPath, content, Encoding.UTF8);
         }

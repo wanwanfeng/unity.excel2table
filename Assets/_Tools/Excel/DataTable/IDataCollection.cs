@@ -11,120 +11,99 @@ using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using Library.Extensions;
 using UnityEngine;
 
 namespace Excel
 {
+
     /// <summary>
     /// 接口
     /// </summary>
     public interface IDataCollection
     {
-        void Add(object data);
+        void Add(params object[] data);
         void Clear();
         void Trim();
         void OnLoaded();
-        string DataPath { get; set; }
+        string[] DataPaths { get; set; }
         string DataSuffix { get; set; }
         void Load(bool isRunTime = false);
     }
 
     /// <summary>
-    /// table
+    /// 接口
+    /// </summary>
+    public interface IDataCollection<in T> : IDataCollection where T : class, new()
+    {
+        void Add(params T[] data);
+    }
+
+    /// <summary>
+    /// list table （列表）
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    /// <typeparam name="TK"></typeparam>
 # if IS_DATATABLEASSET
-    public abstract class DataCollection<TK, T> : ScriptableObject, IDataCollection where T : class, new()
+    public abstract class DataCollection<T> : ScriptableObject, IDataCollection<T>, IDataCollection
+        where T : class, new()
 #else
-    public abstract class DataCollection<TK,T> : IDataCollection where T : class, new()
+    public abstract class DataCollection<T> :  IDataCollection<T>, IDataCollection where T : class, new()
 #endif
     {
-        public List<T> Elements = new List<T>();
-        public Dictionary<TK, T> Cache = new Dictionary<TK, T>();
-        public Dictionary<string, string> CacheDesc = new Dictionary<string, string>();
+        [SerializeField] public List<T> List; //{ get; private set; }
+        public Dictionary<string, string> CacheDesc { get; private set; }
 
-        public T this[int index]
+
+        protected DataCollection()
         {
-            get { return Elements[index]; }
+            List = new List<T>();
+            CacheDesc = new Dictionary<string, string>();
         }
 
-        public void Add(object data)
+        public virtual T this[int index]
         {
-            Elements.Add(data as T);
+            get { return List[index]; }
         }
 
-        public void Clear()
+        public virtual void Add(params T[] data)
         {
-            if (Elements.Count > 0)
-            {
-                Elements.Clear();
-            }
+            List.AddRange(data);
         }
 
-        public void Trim()
+        public virtual void Add(params object[] data)
         {
-            Elements.TrimExcess();
+            List.AddRange(data.OfType<T>().ToArray());
         }
 
-        public virtual T GetItem(TK id)
+        public virtual void Clear()
         {
-            if (id.Equals(default(TK)))
-            {
-                return default(T);
-            }
-            if (typeof (T).GetField("id") != null)
-            {
-                T t = Elements.FirstOrDefault(item => item.GetType().GetField("id").GetValue(item).Equals(id));
-                if (t == null)
-                {
-                    Debug.LogError(DataPath + " 的id：" + id + " 不存在！");
-                    return default(T);
-                }
-                return t;
-            }
-            Debug.LogError("id is not exist : " + id);
-            return default(T);
+            if (List.Count > 0)
+                List.Clear();
         }
 
-        public virtual string GetItemDesc(string fieldName)
+        public virtual void Trim()
+        {
+            List.TrimExcess();
+        }
+
+        public virtual string GetFieldDesc(string fieldName)
         {
             string value = "";
             CacheDesc.TryGetValue(fieldName, out value);
             return value;
         }
 
-        public void OnLoaded()
+        public virtual void OnLoaded()
         {
-            if (typeof (T).GetField("id") == null)
+            CacheDesc = typeof(T).GetFields().ToDictionary(p => p.Name, q =>
             {
-                Debug.LogError("id is not exist!");
-            }
-            try
-            {
-                Cache = Elements.ToDictionary(p => (TK) (p.GetType().GetField("id").GetValue(p)));
-            }
-            catch (Exception e)
-            {
-                Debug.LogError("转换为字典出错：" + DataPath);
-            }
-            finally
-            {
-                CacheDesc = typeof (T).GetFields().ToDictionary(p => p.Name, q =>
-                {
-                    var att = q.GetCustomAttributes(false).OfType<DescriptionAttribute>().FirstOrDefault();
-                    return att == null ? "" : att.Description;
-                });
-            }
+                var att = q.GetFirstCustomAttribute<DescriptionAttribute>();
+                return att == null ? "" : att.Description;
+            });
         }
 
-        public List<T> Gets()
-        {
-            return Elements;
-        }
-
-        public virtual string DataPath { get; set; }
-        public virtual string DataSuffix { get; set; }
+        public string[] DataPaths { get; set; }
+        public string DataSuffix { get; set; }
 
         public virtual void Init()
         {
@@ -134,26 +113,32 @@ namespace Excel
         {
             if (isRunTime)
             {
-                UnityEngine.Object obj = Resources.Load<UnityEngine.Object>(DataPath);
-                if (obj)
+                Clear();
+                foreach (var path in DataPaths)
                 {
-                    ProcessData(obj);
-                    Trim();
-                    if (Elements.Count != 0)
+                    UnityEngine.Object obj = Resources.Load<UnityEngine.Object>(path);
+                    if (obj == null)
                     {
-                        Debug.Log("表加载并解析成功！ " + DataPath);
-                        OnLoaded();
-                        Init();
+                        Debug.LogError("表加载出错！" + path);
                     }
                     else
                     {
-                        Debug.LogError("表加载成功但解析出错！ " + DataPath);
+                        var list = (List<T>) ProcessData(obj);
+                        if (list == null)
+                        {
+                            Debug.LogError("表加载成功但解析出错！ " + path);
+                        }
+                        else
+                        {
+                            Add(list.ToArray());
+                            Debug.Log("表加载并解析成功！ " + path);
+                        }
                     }
                 }
-                else
-                {
-                    Debug.LogError("表加载出错！" + DataPath);
-                }
+
+                Trim();
+                OnLoaded();
+                Init();
             }
             else
             {
@@ -163,7 +148,69 @@ namespace Excel
             }
         }
 
-        protected abstract void ProcessData(UnityEngine.Object table);
+        protected virtual object ProcessData(object obj)
+        {
+            var table = obj as TextAsset;
+            if (table == null) return null;
+
+            var content = table.text.Trim();
+            if (string.IsNullOrEmpty(content)) return null;
+
+            return content;
+        }
+    }
+
+    /// <summary>
+    /// dic table (键值对)
+    /// </summary>
+    /// <typeparam name="T"></typeparam>
+    /// <typeparam name="TK"></typeparam>
+    public abstract class DataCollection<TK, T> : DataCollection<T> where T : class, new()
+    {
+        public Dictionary<TK, T> Cache = new Dictionary<TK, T>();
+
+        public virtual T GetItem(TK id)
+        {
+            {
+                T t;
+                if (Cache.TryGetValue(id, out t))
+                    return t;
+            }
+            /*{
+                if (typeof (T).GetField("id") != null)
+                {
+                    T t = List.FirstOrDefault(item => item.GetType().GetField("id").GetValue(item).Equals(id));
+                    if (t == null)
+                    {
+                        Debug.LogError(DataPaths + " 的id：" + id + " 不存在！");
+                        return default(T);
+                    }
+                    return t;
+                }
+            }*/
+            //Debug.LogError("id is not exist : " + id);
+            return default(T);
+        }
+
+        public override void OnLoaded()
+        {
+            if (typeof(T).GetField("id") == null)
+            {
+                Debug.LogError("id is not exist!");
+            }
+            try
+            {
+                Cache = List.ToDictionary(p => (TK) (p.GetType().GetField("id").GetValue(p)));
+            }
+            catch (Exception e)
+            {
+                Debug.LogError("转换为字典出错：" + DataPaths);
+            }
+            finally
+            {
+                base.OnLoaded();
+            }
+        }
     }
 
     ///  <summary>
@@ -194,9 +241,19 @@ namespace Excel
         //DataTableCsv 
         //DataTableBytes 
         //DataTableAsset 
-        public override string DataPath
+
+        protected DataTable()
         {
-            get { return "Table/" + GetType().Name; }
+            var descriptionAttribute = GetType().GetFirstCustomAttribute<DescriptionAttribute>();
+            if (descriptionAttribute != null)
+                DataSuffix = descriptionAttribute.Description;
+
+            var defaultValueAttribute = GetType().GetFirstCustomAttribute<DefaultValueAttribute>();
+            if (defaultValueAttribute != null)
+                DataPaths = defaultValueAttribute.Value.ToString().Split('|', ',').Distinct()
+                    .Where(p => !string.IsNullOrEmpty(p)).Select(p => "Table/" + p).ToArray();
+            else
+                DataPaths = new[] {"Table/" + GetType().Name};
         }
     }
 }

@@ -1,8 +1,7 @@
-﻿using UnityEngine;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
+using System.Text;
 using Library.Helper;
-using Library.LitJson;
-using Object = UnityEngine.Object;
 
 namespace Excel
 {
@@ -11,26 +10,16 @@ namespace Excel
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TK"></typeparam>
+    [Description(".json")]
     public class DataTableJson<TK, T> : DataCollection<TK, T> where T : class, new()
     {
-        public override string DataSuffix
-        {
-            get { return ".json"; }
-        }
-
         /// <summary>
         /// 解析表
         /// </summary>
-        protected override void ProcessData(Object obj)
+        protected override object ProcessData(object obj)
         {
-            var table = obj as TextAsset;
-            if (table == null) return;
-
-            var content = table.text.Trim();
-            if (string.IsNullOrEmpty(content)) return;
-
-            Clear();
-            Elements = new List<T>(LitJsonHelper.ToObject<T[]>(content));
+            var content = (string) base.ProcessData(obj);
+            return Library.Helper.JsonHelper.ToObject<List<T>>(content);
         }
     }
 
@@ -39,26 +28,16 @@ namespace Excel
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TK"></typeparam>
+    [Description(".xml")]
     public class DataTableXml<TK, T> : DataCollection<TK, T> where T : class, new()
     {
-        public override string DataSuffix
-        {
-            get { return ".xml"; }
-        }
-
         /// <summary>
         /// 解析表
         /// </summary>
-        protected override void ProcessData(Object obj)
+        protected override object ProcessData(object obj)
         {
-            var table = obj as TextAsset;
-            if (table == null) return;
-
-            var content = table.text.Trim();
-            if (string.IsNullOrEmpty(content)) return;
-
-            Clear();
-            Elements = new List<T>(XmlHelper.ToObject<T[]>(content));
+            var content = (string) base.ProcessData(obj);
+            return XmlHelper.ToObject<List<T>>(content);
         }
     }
 
@@ -67,26 +46,16 @@ namespace Excel
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TK"></typeparam>
+    [Description(".xml")]
     public class DataTableXmlAttribute<TK, T> : DataCollection<TK, T> where T : class, new()
     {
-        public override string DataSuffix
-        {
-            get { return ".xml"; }
-        }
-
         /// <summary>
         /// 解析表
         /// </summary>
-        protected override void ProcessData(Object obj)
+        protected override object ProcessData(object obj)
         {
-            var table = obj as TextAsset;
-
-            if (table == null) return;
-            var content = table.text.Trim();
-            if (string.IsNullOrEmpty(content)) return;
-
-            Clear();
-            Elements = EditorExcelRead.FromXmlAttribute<T>(content);
+            var content = (string) base.ProcessData(obj);
+            return EditorExcelRead.FromXmlAttribute<T>(content);
         }
     }
 
@@ -95,26 +64,16 @@ namespace Excel
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TK"></typeparam>
+    [Description(".csv")]
     public class DataTableCsv<TK, T> : DataCollection<TK, T> where T : class, new()
     {
-        public override string DataSuffix
-        {
-            get { return ".csv"; }
-        }
-
         /// <summary>
         /// 解析表
         /// </summary>
-        protected override void ProcessData(Object obj)
+        protected override object ProcessData(object obj)
         {
-            var table = obj as TextAsset;
-            if (table == null) return;
-
-            var content = table.text.Trim();
-            if (string.IsNullOrEmpty(content)) return;
-
-            Clear();
-            Elements = EditorExcelRead.FromCsv<T>(content);
+            var content = (string)base.ProcessData(obj);
+            return EditorExcelRead.FromCsv<T>(content);
         }
     }
 
@@ -123,26 +82,16 @@ namespace Excel
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TK"></typeparam>
+    [Description(".txt")]
     public class DataTableTxt<TK, T> : DataCollection<TK, T> where T : class, new()
     {
-        public override string DataSuffix
-        {
-            get { return ".txt"; }
-        }
-
         /// <summary>
         /// 解析表
         /// </summary>
-        protected override void ProcessData(Object obj)
+        protected override object ProcessData(object obj)
         {
-            var table = obj as TextAsset;
-            if (table == null) return;
-
-            var content = table.text.Trim();
-            if (string.IsNullOrEmpty(content)) return;
-
-            Clear();
-            Elements = EditorExcelRead.FromTxt<T>(content);
+            var content = (string)base.ProcessData(obj);
+            return EditorExcelRead.FromTxt<T>(content);
         }
     }
 
@@ -151,23 +100,16 @@ namespace Excel
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TK"></typeparam>
+    [Description(".bytes")]
     public class DataTableBytes<TK, T> : DataCollection<TK, T> where T : class, new()
     {
-        public override string DataSuffix
-        {
-            get { return ".bytes"; }
-        }
-
         /// <summary>
         /// 解析表
         /// </summary>
-        protected override void ProcessData(Object obj)
+        protected override object ProcessData(object obj)
         {
-            var table = obj as TextAsset;
-            if (table == null) return;
-
-            Clear();
-            Elements = EditorExcelRead.FromBytes<T>(table.bytes);
+            var content = (string)base.ProcessData(obj);
+            return EditorExcelRead.FromBytes<T>(Encoding.UTF8.GetBytes(content));
         }
     }
 
@@ -176,22 +118,16 @@ namespace Excel
     /// </summary>
     /// <typeparam name="T"></typeparam>
     /// <typeparam name="TK"></typeparam>
+    [Description(".asset")]
     public class DataTableAsset<TK, T> : DataCollection<TK, T> where T : class, new()
     {
-        public override string DataSuffix
-        {
-            get { return ".asset"; }
-        }
-
         /// <summary>
         /// 解析表
         /// </summary>
-        protected override void ProcessData(UnityEngine.Object obj)
+        protected override object ProcessData(object obj)
         {
-            var table = obj as DataTableAsset<TK,T>;
-            if (table == null) return;
-
-            Elements = table.Elements;
+            var table = obj as DataTableAsset<TK, T>;
+            return table == null ? null : table.List;
         }
     }
 }

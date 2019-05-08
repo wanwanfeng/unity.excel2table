@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.Linq;
+using Library.Extensions;
 using UnityEditor;
 using UnityEngine;
 
@@ -35,11 +36,7 @@ namespace Excel
         {
             FileInfo fileInfo = new FileInfo(excelFullPath);
 
-            var first =
-                typeof (ExportType).GetField(type.ToString())
-                    .GetCustomAttributes(false)
-                    .OfType<DescriptionAttribute>()
-                    .FirstOrDefault();
+            var first = typeof (ExportType).GetField(type.ToString()).GetFirstCustomAttribute<DescriptionAttribute>();
             if (first != null)
             {
                 tableName = fileInfo.Name.Replace(fileInfo.Extension, first.Description);

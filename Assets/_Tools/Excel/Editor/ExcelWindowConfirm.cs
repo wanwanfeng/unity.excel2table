@@ -117,8 +117,7 @@ namespace Excel
                         {
                             Directory.CreateDirectory(csPath);
                         }
-                        EditorExcelTools.CreateClass(excelInfo,
-                            string.Format(csPath + "{0}.cs", excelInfo.classTableName));
+                        EditorExcelTools.CreateClass(excelInfo.excelFullPath,excelInfo.classInfoName,excelInfo.classTableName,string.Format(csPath + "{0}.cs", excelInfo.classTableName));
                     }
                     AssetDatabase.Refresh();
                     check = true;
