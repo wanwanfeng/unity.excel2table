@@ -1,21 +1,20 @@
 ﻿using Library.Extensions;
+using Library.Helper;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.Data;
 using System.IO;
 using System.Linq;
-using UnityEngine;
 using System.Text;
 using UnityEditor;
-using System;
-using Library.Helper;
+using UnityEngine;
 
 namespace Excel
 {
-	public partial class EditorExcelTools
+    public partial class EditorExcelTools
 	{
 		//设定配表方式
-		static Excel.ImpHelper helper => new Excel.Helper.Json();
+		static Excel.ImpHelper helper => Sample.helper;
 
 		public static string ExcelPath = "Excel/"; //Excel根目录
 		public static string TablePath = "Temp/Excel/"; //Table根目录
