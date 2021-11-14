@@ -1,4 +1,4 @@
-﻿using System;
+﻿using Library.Extensions;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -6,139 +6,164 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 using System.Text;
+using UnityEditor;
+using System;
+using Library.Helper;
 
 namespace Excel
 {
-    public enum ExportType
-    {
-        [Description(".xml")] ToXml,
-        [Description(".xml")] ToXmlAttribute,
-        [Description(".json")] ToJson,
-        [Description(".txt")] ToTxt,
-        [Description(".txt")] ToCsv,
-        [Description(".byte")] ToBytes,
-        [Description(".asset")] ToAsset,
-        [Description(".lua")] ToLua,
-    }
+	public partial class EditorExcelTools
+	{
+		public static string ExcelPath = "Assets/_Table/Excel/"; //Excel根目录
+		public static string TablePath = "Temp/Excel/"; //Table根目录
 
-    /// <summary>
-    /// 每个格子的信息
-    /// </summary>
-    public struct Cell
-    {
-        public string remark; //每格备注
-        public string name; //每格名
-        public string type; //每格类型名
-        public string value; //每格值
-    }
+		[Serializable]
+		public class ExcelInfo
+		{
+			public string excelName { get; set; }
+			public string excelFullPath { get; set; }
+			public string classTableName { get; set; }
+			public string classInfoName { get; set; }
+			public int sheet { get; set; } = 0;
 
-    public class EditorExcelTools
-    {
+			public ExcelInfo(string excelFullPath)
+			{
+				this.excelFullPath = excelFullPath;
+				this.excelName = Path.GetFileName(excelFullPath);
+				this.classTableName = Path.GetFileNameWithoutExtension(excelFullPath);
+				this.classInfoName = classTableName.Replace("Table", "Info");
+			}
+		}
 
-        #region 创建类文件
+		[MenuItem("Tools/ExcelTools/Build")]
+		private static void ExportExcel()
+		{
+			Directory.CreateDirectory(ExcelPath);
+			Directory.CreateDirectory(TablePath);
 
-        /// <summary>
-        /// 创建类文件
-        /// </summary>
-        /// <param name="excelFullPath"></param>
-        /// <param name="classInfoName"></param>
-        /// <param name="classTableName"></param>
-        /// <param name="csPath"></param>
-        public static void CreateClass(string excelFullPath, string classInfoName, string classTableName, string csPath)
-        {
-            var dic = ExportTable(excelFullPath, 0);
-            if (dic == null || dic.Count == 0)
-                return;
+			var files = Directory.GetFiles(ExcelPath, "*.*", SearchOption.TopDirectoryOnly)
+				.Where(p => p.EndsWith(".xlsx") || p.EndsWith(".xls"))
+				.Select(p => new ExcelInfo(p))
+				.Where(p => !p.classTableName.StartsWith("."))
+				.ToArray();
 
-            string strClass =
-                "using System;\nusing System.ComponentModel;\nusing Excel;\n\n[Serializable]\npublic partial class {0}\n{{{2}\n}}\n\n[Serializable]\npublic partial class {1} : DataTable<{3}, {0}>\n{{\n}}";
-            string strField = "\n\t[Description(\"{2}\")]\n\tpublic {0} {1};";
-            string fields = "";
-            string keyType = "";
-            foreach (var cell in dic[0])
-            {
-                if (cell.name == "id")
-                {
-                    keyType = cell.type;
-                }
-                fields += string.Format(strField, cell.type, cell.name, cell.remark.Replace("\n", ""));
-            }
-            Debug.Log(csPath + "\n" + fields);
-            string content = string.Format(strClass, classInfoName, classTableName, fields, keyType);
-            Debug.Log(csPath + "\n" + content);
-            File.WriteAllText(csPath, content, Encoding.UTF8);
-        }
+			Debug.Log(files.Join("\n"));
+			Debug.Log(JsonHelper.ToJson(files));
 
-        #endregion
+			CreateClass(files);
+			ExportTable(files, new Excel.Helper.Json());
+			AssetDatabase.Refresh();
+		}
 
-        #region 导出
+		/// <summary>
+		/// 创建类文件
+		/// </summary>
+		/// <param name="excelFullPath"></param>
+		public static void CreateClass(ExcelInfo[] content)
+		{
+			StringBuilder sb = new StringBuilder();
+			StringBuilder sb2 = new StringBuilder();
 
-        /// <summary>
-        /// 检测文件
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private static bool CheckPath(string path)
-        {
-            if (string.IsNullOrEmpty(path))
-            {
-                Debug.Log("请选择一个Excel文件！");
-                return false;
-            }
+			sb.AppendLine("using System;");
+			sb.AppendLine("using System.Collections.Generic;");
+			sb.AppendLine("using System.ComponentModel;");
+			sb.AppendLine("using Excel;");
+			sb.AppendLine("using UnityEngine;");
+			sb.AppendLine("");
 
-            FileInfo fileInfo = new FileInfo(path);
-            if (fileInfo.Directory != null && !Directory.Exists(fileInfo.Directory.FullName))
-            {
-                Directory.CreateDirectory(fileInfo.Directory.FullName);
-            }
-            if (fileInfo.Extension == ".xls" || fileInfo.Extension == ".xlsx")
-            {
-                return true;
-            }
-            Debug.LogError("选择的文件类型错误！");
-            return false;
-        }
+			sb2.AppendLine("public interface IData {}");
 
-        public static bool ExportTo(ExportType type, string path, string[] savePaths, int sheet = 0)
-        {
-            if (!CheckPath(path))
-                return false;
-            var dic = ExportTable(path, sheet);
-            if (dic == null || dic.Count == 0)
-            {
-                return false;
-            }
-            savePaths = savePaths.Select(p => p + Path.GetFileName(path)).ToArray();
-            foreach (string save in savePaths)
-            {
-                var dir = Path.GetDirectoryName(save);
-                if (dir != null && !Directory.Exists(dir))
-                {
-                    Directory.CreateDirectory(dir);
-                }
-            }
-            string savePath = savePaths[0];
-            if (EditorExcelWrite.To(type, savePath, dic))
-            {
-                for (int i = 1; i < savePaths.Length; i++)
-                {
-                    if (savePath != null)
-                        File.Copy(savePath, Path.ChangeExtension(savePaths[i], Path.GetExtension(savePath)), true);
-                }
-                Debug.Log(Path.GetFileName(savePath) + " 导表成功!");
-                return true;
-            }
-            return false;
-        }
+			foreach (ExcelInfo excelInfo in content.OrderBy(p => p.excelName))
+			{
+				var dic = GetDictionary(excelInfo.excelFullPath, excelInfo.sheet);
+				if (dic.Count == 0) continue;
 
-        #endregion
+				string keyType = dic[0].FirstOrDefault(p => p.name == "id").type;
 
-        #region excel 导出核心
+				//创建DataInfo
+				sb.AppendLine("");
+				sb.AppendLine("[Serializable]");
+				sb.AppendLine($"public partial class {excelInfo.classInfoName} : DataInfo<{keyType}>");
+				sb.AppendLine("{");
+				{
+					foreach (var cell in dic[0])
+					{
+						sb.Append("\t"); sb.AppendLine($"[Description(\"{cell.remark.Replace("\n", "")}\")]");
+						sb.Append("\t"); sb.AppendLine($"public {cell.type} {cell.name};");
+					}
 
-        private static Dictionary<int, List<Cell>> ExportTable(string path, int sheet)
-        {
-            return TT_GetDataRow(path, sheet);
-        }
+					//创建DataInfo.GetPrimaryKey
+					sb.Append("\t"); sb.AppendLine($"public override {keyType} GetPrimaryKey()");
+					sb.Append("\t"); sb.AppendLine("{");
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return id;");
+					sb.Append("\t"); sb.AppendLine("}");
+
+					sb.Append("\t"); sb.AppendLine("partial void OnConstruction();");
+
+					//创建DataInfo.Copy
+					sb.Append("\t"); sb.AppendLine($"public {excelInfo.classInfoName} Copy({excelInfo.classInfoName} other)");
+					sb.Append("\t"); sb.AppendLine("{");
+					foreach (var cell in dic[0])
+					{
+						sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"this.{cell.name} = other.{cell.name};");
+					}
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("OnConstruction();");
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return other;");
+					sb.Append("\t"); sb.AppendLine("}");
+
+
+					//创建DataInfo.Dict
+					sb.Append("\t"); sb.AppendLine($"public static explicit operator {excelInfo.classInfoName}(Dictionary<string, object> other)");
+					sb.Append("\t"); sb.AppendLine("{");
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"var val_ = new {excelInfo.classInfoName}();");
+					foreach (var cell in dic[0])
+					{
+						sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"val_.{cell.name} = other.ContainsKey(\"{cell.name}\") ? ({cell.type})other[\"{cell.name}\"] : default;");
+					}
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("val_.OnConstruction();");
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return val_;");
+					sb.Append("\t"); sb.AppendLine("}");
+				}
+				sb.AppendLine("}");
+
+				//创建DataTable
+				sb2.AppendLine("[Serializable]");
+				sb2.AppendLine($"public partial class {excelInfo.classTableName} : DataTable<{keyType}, {excelInfo.classInfoName}>, IData");
+				sb2.AppendLine("{");
+				sb2.AppendLine("}");
+			}
+
+			sb.AppendLine(sb2.ToString());
+
+			//创建TableManager
+			sb.AppendLine($"public partial class TableManager");
+			sb.AppendLine("{");
+			foreach (ExcelInfo excelInfo in content.OrderBy(p => p.excelName))
+			{
+				sb.Append("\t"); sb.AppendLine($"public  {excelInfo.classTableName} {excelInfo.classTableName} {{ get; private set; }}");
+			}
+			sb.AppendLine("}");
+			File.WriteAllText(Path.Combine(TablePath, "data.cs"), sb.ToString());
+		}
+
+		public static void ExportTable(ExcelInfo[] content, ImpHelper helper)
+		{
+			var root = Path.Combine(TablePath, "data");
+			Directory.CreateDirectory(root);
+
+			foreach (var excelInfo in content)
+			{
+				string path = excelInfo.excelFullPath;
+				var dic = GetDictionary(path, excelInfo.sheet);
+				if (dic.Count == 0) continue;
+				string savePath = Path.ChangeExtension(Path.Combine(root, excelInfo.classTableName), helper.Extensions);
+				Debug.Log(path + "\n" + savePath);
+				helper.Export(savePath, dic, null);
+			}
+
+			var tables = Directory.GetFiles(root, "*.*").ToArray();
+			FileHelper.GZIP.Serialize(tables, "Assets/Resources/data.bin.bytes");
+		}
 
         /// <summary>
         /// 数据组合成字典
@@ -146,126 +171,83 @@ namespace Excel
         /// <param name="path"></param>
         /// <param name="rowCollection"></param>
         /// <returns></returns>
-        private static Dictionary<int, List<Cell>> GetDictionary(string path, DataRowCollection rowCollection)
+        private static Dictionary<int, List<Cell>> GetDictionary(string path, int sheet)
         {
-            int curHang = 0;
-            var remarks = rowCollection[curHang].ItemArray.ToList();
-
-            curHang++;
-
-            var names = rowCollection[curHang].ItemArray.ToList();
-            for (var i = 0; i < names.Count; i++)
+            //using (var dd = new MS_GetConnection(path))
+            using (var dd = new TT_GetTable(path))
             {
-                if (names[i] != null && !string.IsNullOrEmpty(names[i].ToString())) continue;
-                Debug.LogError(Path.GetFileName(path) +
-                               string.Format(":变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1,
-                                   names.Count));
-                return null;
-            }
+                DataRowCollection rowCollection = dd.GetDataRowCollection(sheet);
+                int curHang = 0;
 
-            curHang++;
-
-            var types = rowCollection[curHang].ItemArray.ToList();
-            for (var i = 0; i < types.Count; i++)
-            {
-                if (types[i] != null && !string.IsNullOrEmpty(types[i].ToString())) continue;
-                Debug.LogError(Path.GetFileName(path) +
-                               string.Format(":变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1,
-                                   types.Count));
-                return null;
-            }
-
-            curHang++;
-
-            var dic = new Dictionary<int, List<Cell>>();
-            for (var j = curHang; j < rowCollection.Count; j++)
-            {
-                var rows = rowCollection[j].ItemArray.ToList();
-                if (string.IsNullOrEmpty(rows[0].ToString()))
+                //描述行信息
+                var remarks = rowCollection[curHang++].ItemArray.ToList();
+                //名称行信息
+                var names = rowCollection[curHang++].ItemArray.ToList();
+                for (var i = 0; i < names.Count; i++)
                 {
-                    continue; //首格为空时此行跳过
+                    if (names[i] != null && !string.IsNullOrEmpty(names[i].ToString())) continue;
+                    Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Count, Path.GetFileName(path));
+                    return null;
                 }
-                var rowresult = new List<Cell>();
-                for (var i = 0; i < rows.Count; i++)
+
+                //类型行信息
+                var types = rowCollection[curHang++].ItemArray.ToList();
+                for (var i = 0; i < types.Count; i++)
                 {
-                    if (rows[i] == null) continue;
-                    if (types[i].ToString().StartsWith("#") || names[i].ToString().StartsWith("#"))
+                    if (types[i] != null && !string.IsNullOrEmpty(types[i].ToString())) continue;
+                    Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Count, Path.GetFileName(path));
+                    return null;
+                }
+
+                var dic = new Dictionary<int, List<Cell>>();
+                //值行信息
+                for (var j = curHang++; j < rowCollection.Count; j++)
+                {
+                    var rows = rowCollection[j].ItemArray.ToList();
+                    if (string.IsNullOrEmpty(rows[0].ToString()))
                     {
-                        //备注列（不属于有效数据）
-                        continue;
+                        continue; //首格为空时此行跳过
                     }
-                    rowresult.Add(new Cell
+                    var rowresult = new List<Cell>();
+                    for (var i = 0; i < rows.Count; i++)
                     {
-                        remark = remarks[i].ToString(),
-                        name = names[i].ToString(),
-                        type = types[i].ToString(),
-                        value = rows[i].ToString()
-                    });
+                        if (rows[i] == null) continue;
+                        if (types[i].ToString().StartsWith("#") || names[i].ToString().StartsWith("#"))
+                        {
+                            //备注列（不属于有效数据）
+                            continue;
+                        }
+                        rowresult.Add(new Cell
+                        {
+                            remark = remarks[i].ToString(),
+                            name = names[i].ToString(),
+                            type = types[i].ToString(),
+                            value = rows[i].ToString()
+                        });
+                    }
+                    dic[j - curHang] = rowresult;
                 }
-                dic[j - curHang] = rowresult;
-            }
-            return dic;
-        }
-
-        #region 跨平台插件
-
-
-        /// <summary>
-        /// 获取内容
-        /// </summary>
-        /// <param name="path"></param>
-        /// <param name="sheet"></param>
-        private static Dictionary<int, List<Cell>> TT_GetDataRow(string path, int sheet)
-        {
-            DataSet dataSet = TT_GetDataSet(path);
-            if (dataSet == null)
-            {
-                Debug.Log(null);
-                return null;
-            }
-
-            DataTable table = dataSet.Tables[sheet]; //返回第一张表
-
-            DataRowCollection rowCollection = table.Rows; //返回一个行的集合
-
-            Debug.Log(string.Format("行:{0}\n列:{1}", table.Rows.Count, table.Columns.Count));
-
-            //此方法默认从第一行输出
-            //第一行为描述
-            //遍历行的集合，取得每一行的DataRow对象
-            //默认表中第一行为表头，输出
-            //人为规定第二行为变量名称
-            //人为规定第三行为变量类型
-            //共有多少列由第二行第三行列数来决定
-            return GetDictionary(path, rowCollection);
-        }
-
-        /// <summary>
-        /// 获取dataset
-        /// </summary>
-        /// <param name="path"></param>
-        /// <returns></returns>
-        private static DataSet TT_GetDataSet(string path)
-        {
-            try
-            {
-                FileStream stream = File.Open(path, FileMode.Open, FileAccess.Read);
-                IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
-                DataSet result = excelReader.AsDataSet();
-                stream.Dispose();
-                stream.Close();
-                return result;
-            }
-            catch (Exception err)
-            {
-                Debug.LogError(Path.GetFileName(path) + ":数据绑定Excel失败!失败原因：" + err.Message);
-                return null;
+                return dic;
             }
         }
+	}
 
-        #endregion
+	public class GetTable
+	{
+		public virtual DataTable GetDataTable(int sheet)
+		{
+			return null;
+		}
 
-        #endregion
+		public virtual DataRowCollection GetDataRowCollection(int sheet)
+		{
+			DataTable table = GetDataTable(sheet); //返回第一张表
 
-    }
+			DataRowCollection rowCollection = table.Rows; //返回一个行的集合
+
+			Debug.Log(string.Format("行:{0}\n列:{1}", table.Rows.Count, table.Columns.Count));
+
+			return rowCollection;
+		}
+	}
 }
