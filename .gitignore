@@ -11,3 +11,5 @@
 /*.userprefs
 /*.pidb
 /*.booproj
+/.vs/unity.excel2table/v16/*.suo
+/.vsconfig

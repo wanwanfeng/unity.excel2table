@@ -14,7 +14,7 @@ namespace Excel
 {
 	public partial class EditorExcelTools
 	{
-		public static string ExcelPath = "Assets/_Table/Excel/"; //Excel根目录
+		public static string ExcelPath = "Excel/"; //Excel根目录
 		public static string TablePath = "Temp/Excel/"; //Table根目录
 
 		[Serializable]
