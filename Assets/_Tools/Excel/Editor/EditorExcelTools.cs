@@ -14,6 +14,9 @@ namespace Excel
 {
 	public partial class EditorExcelTools
 	{
+		//设定配表方式
+		static Excel.ImpHelper helper => new Excel.Helper.Json();
+
 		public static string ExcelPath = "Excel/"; //Excel根目录
 		public static string TablePath = "Temp/Excel/"; //Table根目录
 
@@ -51,7 +54,7 @@ namespace Excel
 			Debug.Log(JsonHelper.ToJson(files));
 
 			CreateClass(files);
-			ExportTable(files, new Excel.Helper.Json());
+			ExportTable(files, helper);
 			AssetDatabase.Refresh();
 		}
 
