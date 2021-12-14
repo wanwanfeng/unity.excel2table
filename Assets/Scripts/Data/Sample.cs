@@ -24,33 +24,47 @@ public partial class Sample : MonoBehaviour
 			.Where(p => !p.IsAbstract)
 			.ToDictionary(p => p, p => (IDataCollection)Activator.CreateInstance(p));
 
-		var path = Path.Combine(Application.persistentDataPath, "data.bin");
+		using (var loader = new LoadBin())
+		{
+			if (FileHelper.GZIP.Deserialize(loader.path, out Dictionary<string, byte[]> dict))
+			{
+				dict = dict.ToDictionary(p => Path.GetFileNameWithoutExtension(p.Key), p => p.Value);
+
+				foreach (var pair in dictionary)
+				{
+					if (dict.TryGetValue(pair.Key.Name, out byte[] bytes))
+					{
+						Debug.Log("this table is now ! " + pair.Key.Name);
+						yield return pair.Value.Load(helper, bytes);
+
+						//var info = GetType().GetProperty(pair.Key.Name, BindingFlags.Public | BindingFlags.Instance);
+						//if (info == null) continue;
+						//info.SetValue(this, pair.Value);
+					}
+					else
+					{
+						Debug.LogError("this table is not exist! " + pair.Key.Name);
+					}
+				}
+			}
+		}
+	}
+}
+
+public partial class LoadBin : IDisposable
+{
+	public string path { get; set; }
+
+	public LoadBin()
+	{
+		path = Path.Combine(Application.persistentDataPath, "data.bin");
 		var textAsset = Resources.Load<TextAsset>("data.bin");
 		File.WriteAllBytes(path, textAsset.bytes);
 		Resources.UnloadAsset(textAsset);
-
-		if (FileHelper.GZIP.Deserialize(path, out Dictionary<string, byte[]> dict))
-		{
-			dict = dict.ToDictionary(p => Path.GetFileNameWithoutExtension(p.Key), p => p.Value);
-
-			foreach (var pair in dictionary)
-			{
-				if (dict.TryGetValue(pair.Key.Name, out byte[] bytes))
-				{
-					Debug.Log("this table is now ! " + pair.Key.Name);
-					yield return pair.Value.Load(helper, bytes);
-
-					var info = GetType().GetProperty(pair.Key.Name, BindingFlags.Public | BindingFlags.Instance);
-					if (info == null) continue;
-					info.SetValue(this, pair.Value);
-                }
-                else
-                {
-					Debug.LogError("this table is not exist! " + pair.Key.Name);
-                }
-			}
-		}
-
-		File.Delete(path);
+	}
+	void IDisposable.Dispose()
+	{
+		if (File.Exists(path))
+			File.Delete(path);
 	}
 }
