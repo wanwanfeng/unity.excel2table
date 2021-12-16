@@ -1,10 +1,11 @@
-using Library.Helper;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Xml;
 using System.Xml.Linq;
+using System.Xml.Serialization;
 
 namespace Excel
 {
@@ -13,12 +14,16 @@ namespace Excel
         public partial class Xml : ImpHelper
         {
             public string Extensions { get { return ".xml"; } }
+
             object ImpHelper.ProcessData<T>(object obj)
             {
                 if (!(obj is byte[] bytes)) return null;
-                var content = System.Text.Encoding.UTF8.GetString(bytes);
-                return XmlHelper.ToObject<List<T>>(content);
+                XmlSerializer xmlserializer = new XmlSerializer(typeof(List<T>));
+                using (MemoryStream xmlstream = new MemoryStream(bytes))
+                using (XmlReader xmlreader = XmlReader.Create(xmlstream))
+                    return xmlserializer.Deserialize(xmlreader) as List<T>;
             }
+
             void ImpHelper.Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName)
             {
                 var array = dic.Select(item =>

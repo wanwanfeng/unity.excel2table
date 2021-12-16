@@ -4,8 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
-using Library.Extensions;
-using PLitJson;
+using LitJson;
 
 namespace Excel
 {
@@ -35,25 +34,25 @@ namespace Excel
                 case char _: fileInfo.SetValue(obj, value.ReadChar()); break;
                 case string _: fileInfo.SetValue(obj, value.ReadString()); break;
 
-                case bool[] _: fileInfo.SetValue(obj, value.ReadString().ToBoolArray('|')); break;
-                case int[] _: fileInfo.SetValue(obj, value.ReadString().ToIntArray('|')); break;
-                case float[] _: fileInfo.SetValue(obj, value.ReadString().ToFloatArray('|')); break;
-                case double[] _: fileInfo.SetValue(obj, value.ReadString().ToDoubleArray('|')); break;
-                case long[] _: fileInfo.SetValue(obj, value.ReadString().ToLongArray('|')); break;
-                case decimal[] _: fileInfo.SetValue(obj, value.ReadString().ToDecimalArray('|')); break;
-                case byte[] _: fileInfo.SetValue(obj, value.ReadString().ToBoolArray('|')); break;
-                case short[] _: fileInfo.SetValue(obj, value.ReadString().ToShortArray('|')); break;
+                case bool[] _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(bool.Parse).ToArray()); break;
+                case int[] _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(int.Parse).ToArray()); break;
+                case float[] _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(float.Parse).ToArray()); break;
+                case double[] _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(double.Parse).ToArray()); break;
+                case long[] _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(long.Parse).ToArray()); break;
+                case decimal[] _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(decimal.Parse).ToArray()); break;
+                case byte[] _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(byte.Parse).ToArray()); break;
+                case short[] _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(short.Parse).ToArray()); break;
                 case char[] _: fileInfo.SetValue(obj, value.ReadString().ToCharArray()); break;
                 case string[] _: fileInfo.SetValue(obj, value.ReadString().Split('|')); break;
 
-                case List<bool> _: fileInfo.SetValue(obj, value.ReadString().ToBoolArray('|').ToList()); break;
-                case List<int> _: fileInfo.SetValue(obj, value.ReadString().ToIntArray('|').ToList()); break;
-                case List<float> _: fileInfo.SetValue(obj, value.ReadString().ToFloatArray('|').ToList()); break;
-                case List<double> _: fileInfo.SetValue(obj, value.ReadString().ToDoubleArray('|').ToList()); break;
-                case List<long> _: fileInfo.SetValue(obj, value.ReadString().ToLongArray('|').ToList()); break;
-                case List<decimal> _: fileInfo.SetValue(obj, value.ReadString().ToDecimalArray('|').ToList()); break;
-                case List<byte> _: fileInfo.SetValue(obj, value.ReadString().ToBoolArray('|').ToList()); break;
-                case List<short> _: fileInfo.SetValue(obj, value.ReadString().ToShortArray('|').ToList()); break;
+                case List<bool> _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(bool.Parse).ToList()); break;
+                case List<int> _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(int.Parse).ToList()); break;
+                case List<float> _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(float.Parse).ToList()); break;
+                case List<double> _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(double.Parse).ToList()); break;
+                case List<long> _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(long.Parse).ToList()); break;
+                case List<decimal> _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(decimal.Parse).ToList()); break;
+                case List<byte> _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(byte.Parse).ToList()); break;
+                case List<short> _: fileInfo.SetValue(obj, value.ReadString().Split('|').Select(short.Parse).ToList()); break;
                 case List<char> _: fileInfo.SetValue(obj, value.ReadString().ToCharArray().ToList()); break;
                 case List<string> _: fileInfo.SetValue(obj, value.ReadString().Split('|').ToList()); break;
 
@@ -67,36 +66,36 @@ namespace Excel
         {
             switch (fileInfo.GetValue(obj))
             {
-                case bool _: fileInfo.SetValue(obj, value.AsBool()); break;
-                case int _: fileInfo.SetValue(obj, value.AsInt()); break;
-                case float _: fileInfo.SetValue(obj, value.AsFloat()); break;
-                case double _: fileInfo.SetValue(obj, value.AsDouble()); break;
-                case long _: fileInfo.SetValue(obj, value.AsLong()); break;
-                case decimal _: fileInfo.SetValue(obj, value.AsDecimal()); break;
-                case byte _: fileInfo.SetValue(obj, value.AsByte()); break;
-                case short _: fileInfo.SetValue(obj, value.AsShort()); break;
+                case bool _: fileInfo.SetValue(obj, bool.Parse(value)); break;
+                case int _: fileInfo.SetValue(obj, int.Parse(value)); break;
+                case float _: fileInfo.SetValue(obj, float.Parse(value)); break;
+                case double _: fileInfo.SetValue(obj, double.Parse(value)); break;
+                case long _: fileInfo.SetValue(obj, long.Parse(value)); break;
+                case decimal _: fileInfo.SetValue(obj, decimal.Parse(value)); break;
+                case byte _: fileInfo.SetValue(obj, byte.Parse(value)); break;
+                case short _: fileInfo.SetValue(obj, short.Parse(value)); break;
                 case char _: fileInfo.SetValue(obj, value[0]); break;
                 case string _: fileInfo.SetValue(obj, value); break;
 
-                case bool[] _: fileInfo.SetValue(obj, value.ToBoolArray('|')); break;
-                case int[] _: fileInfo.SetValue(obj, value.ToIntArray('|')); break;
-                case float[] _: fileInfo.SetValue(obj, value.ToFloatArray('|')); break;
-                case double[] _: fileInfo.SetValue(obj, value.ToDoubleArray('|')); break;
-                case long[] _: fileInfo.SetValue(obj, value.ToLongArray('|')); break;
-                case decimal[] _: fileInfo.SetValue(obj, value.ToDecimalArray('|')); break;
-                case byte[] _: fileInfo.SetValue(obj, value.ToBoolArray('|')); break;
-                case short[] _: fileInfo.SetValue(obj, value.ToShortArray('|')); break;
+                case bool[] _: fileInfo.SetValue(obj, value.Split('|').Select(bool.Parse).ToArray()); break;
+                case int[] _: fileInfo.SetValue(obj, value.Split('|').Select(int.Parse).ToArray()); break;
+                case float[] _: fileInfo.SetValue(obj, value.Split('|').Select(float.Parse).ToArray()); break;
+                case double[] _: fileInfo.SetValue(obj, value.Split('|').Select(double.Parse).ToArray()); break;
+                case long[] _: fileInfo.SetValue(obj, value.Split('|').Select(long.Parse).ToArray()); break;
+                case decimal[] _: fileInfo.SetValue(obj, value.Split('|').Select(decimal.Parse).ToArray()); break;
+                case byte[] _: fileInfo.SetValue(obj, value.Split('|').Select(byte.Parse).ToArray()); break;
+                case short[] _: fileInfo.SetValue(obj, value.Split('|').Select(short.Parse).ToArray()); break;
                 case char[] _: fileInfo.SetValue(obj, value.ToCharArray()); break;
                 case string[] _: fileInfo.SetValue(obj, value.Split('|')); break;
 
-                case List<bool> _: fileInfo.SetValue(obj, value.ToBoolArray('|').ToList()); break;
-                case List<int> _: fileInfo.SetValue(obj, value.ToIntArray('|').ToList()); break;
-                case List<float> _: fileInfo.SetValue(obj, value.ToFloatArray('|').ToList()); break;
-                case List<double> _: fileInfo.SetValue(obj, value.ToDoubleArray('|').ToList()); break;
-                case List<long> _: fileInfo.SetValue(obj, value.ToLongArray('|').ToList()); break;
-                case List<decimal> _: fileInfo.SetValue(obj, value.ToDecimalArray('|').ToList()); break;
-                case List<byte> _: fileInfo.SetValue(obj, value.ToBoolArray('|').ToList()); break;
-                case List<short> _: fileInfo.SetValue(obj, value.ToShortArray('|').ToList()); break;
+                case List<bool> _: fileInfo.SetValue(obj, value.Split('|').Select(bool.Parse).ToList()); break;
+                case List<int> _: fileInfo.SetValue(obj, value.Split('|').Select(int.Parse).ToList()); break;
+                case List<float> _: fileInfo.SetValue(obj, value.Split('|').Select(float.Parse).ToList()); break;
+                case List<double> _: fileInfo.SetValue(obj, value.Split('|').Select(double.Parse).ToList()); break;
+                case List<long> _: fileInfo.SetValue(obj, value.Split('|').Select(long.Parse).ToList()); break;
+                case List<decimal> _: fileInfo.SetValue(obj, value.Split('|').Select(decimal.Parse).ToList()); break;
+                case List<byte> _: fileInfo.SetValue(obj, value.Split('|').Select(byte.Parse).ToList()); break;
+                case List<short> _: fileInfo.SetValue(obj, value.Split('|').Select(short.Parse).ToList()); break;
                 case List<char> _: fileInfo.SetValue(obj, value.ToCharArray().ToList()); break;
                 case List<string> _: fileInfo.SetValue(obj, value.Split('|').ToList()); break;
 
@@ -129,14 +128,14 @@ namespace Excel
             type = type.ToLower();
             switch (type)
             {
-                case "bool": writer.Write(value.AsBool()); break;
-                case "int": writer.Write(value.AsInt()); break;
-                case "float": writer.Write(value.AsFloat()); break;
-                case "double": writer.Write(value.AsDouble()); break;
-                case "long": writer.Write(value.AsLong()); break;
-                case "decimal": writer.Write(value.AsDecimal()); break;
-                case "byte": writer.Write(value.AsByte()); break;
-                case "short": writer.Write(value.AsShort()); break;
+                case "bool": writer.Write(bool.Parse(value)); break;
+                case "int": writer.Write(int.Parse(value)); break;
+                case "float": writer.Write(float.Parse(value)); break;
+                case "double": writer.Write(double.Parse(value)); break;
+                case "long": writer.Write(long.Parse(value)); break;
+                case "decimal": writer.Write(decimal.Parse(value)); break;
+                case "byte": writer.Write(byte.Parse(value)); break;
+                case "short": writer.Write(short.Parse(value)); break;
                 case "char":
                 case "string":
                 case "bool[]":
@@ -172,14 +171,14 @@ namespace Excel
             type = type.ToLower();
             switch (type)
             {
-                case "bool": writer.Write(value.AsBool()); break;
-                case "int": writer.Write(value.AsInt()); break;
-                case "float": writer.Write(value.AsFloat()); break;
-                case "double": writer.Write(value.AsDouble()); break;
-                case "long": writer.Write(value.AsLong()); break;
-                case "decimal": writer.Write(value.AsDecimal()); break;
-                case "byte": writer.Write(value.AsByte()); break;
-                case "short": writer.Write(value.AsShort()); break;
+                case "bool": writer.Write(bool.Parse(value)); break;
+                case "int": writer.Write(int.Parse(value)); break;
+                case "float": writer.Write(float.Parse(value)); break;
+                case "double": writer.Write(double.Parse(value)); break;
+                case "long": writer.Write(long.Parse(value)); break;
+                case "decimal": writer.Write(decimal.Parse(value)); break;
+                case "byte": writer.Write(byte.Parse(value)); break;
+                case "short": writer.Write(short.Parse(value)); break;
                 case "string": 
                 case "char": writer.Write(value); break;
                 case "bool[]":

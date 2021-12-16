@@ -1,6 +1,4 @@
-﻿using Library.Extensions;
-using Library.Helper;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -49,8 +47,7 @@ namespace Excel
 				.Where(p => !p.classTableName.StartsWith("."))
 				.ToArray();
 
-			Debug.Log(files.Join("\n"));
-			Debug.Log(JsonHelper.ToJson(files));
+			Debug.Log(LitJson.JsonMapper.ToJson(files));
 
 			CreateClass(files);
 			ExportTable(files, helper);

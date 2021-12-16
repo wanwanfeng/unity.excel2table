@@ -4,7 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
-using Library.Extensions;
 using UnityEngine;
 
 namespace Excel
@@ -49,7 +48,7 @@ namespace Excel
 		{
 			CacheDesc = typeof(T).GetFields().ToDictionary(p => p.Name, q =>
 			{
-				return q.GetFirstCustomAttribute<DescriptionAttribute>()?.Description;
+				return q.GetCustomAttributes(false).OfType<DescriptionAttribute>().FirstOrDefault()?.Description;
 			});
 		}
 

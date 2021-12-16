@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Security.Cryptography;
+using LitJson;
 
 public class FileHelper
 {
@@ -43,8 +44,8 @@ public class FileHelper
 
 	static FileHelper()
 	{
-		PLitJson.JsonMapper.RegisterImporter<double, float>(input => (float)input);
-		PLitJson.JsonMapper.RegisterExporter<float>((v, w) => { w.Write(v); });
+		JsonMapper.RegisterImporter<double, float>(input => (float)input);
+		JsonMapper.RegisterExporter<float>((v, w) => { w.Write(v); });
 	}
 
 	[System.Diagnostics.Conditional("UNITY_EDITOR")]
@@ -71,16 +72,16 @@ public class FileHelper
 	static public string ToJson<T>(T t, int indentLevel = 0, bool validate = true)
 	{
 		if (indentLevel == 0 && validate)
-			return PLitJson.JsonMapper.ToJson(t);
+			return JsonMapper.ToJson(t);
 
 		StringWriter sw = new StringWriter();
-		PLitJson.JsonWriter jsonWriter = new PLitJson.JsonWriter(sw)
+		JsonWriter jsonWriter = new JsonWriter(sw)
 		{
 			PrettyPrint = true,
 			IndentValue = indentLevel,
 			Validate = validate,
 		};
-		PLitJson.JsonMapper.ToJson(t, jsonWriter);
+		JsonMapper.ToJson(t, jsonWriter);
 		return sw.ToString().Trim('\r', '\n');
 	}
 

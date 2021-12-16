@@ -1,5 +1,4 @@
-using Library.Helper;
-using PLitJson;
+using LitJson;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -18,7 +17,7 @@ namespace Excel
                 if (!(obj is byte[] bytes)) return null;
                 var content = System.Text.Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
                 //Debug.Log(content);
-                return Library.Helper.JsonHelper.ToObject<List<T>>(content.Trim('\r', '\n'));
+                return JsonMapper.ToObject<List<T>>(content.Trim('\r', '\n'));
             }
 
             void ImpHelper.Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName)
