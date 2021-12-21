@@ -70,10 +70,18 @@ namespace Excel
 
 		IEnumerator IDataCollection.Load(ImpHelper helper, object obj)
 		{
-			foreach (var item in helper.ProcessData<T>(obj) as List<T>)
+			if (helper.ProcessData<T>(obj) is List<T> list)
 			{
-				Add(item);
-			}
+				foreach (var item in list)
+				{
+					Add(item);
+				}
+            }
+            else
+            {
+				throw new Exception("类型错误！");
+            }
+
 			ReviseFunc?.Invoke();
 
 			yield break;
