@@ -157,7 +157,7 @@ namespace Excel
 				if (dic.Count == 0) continue;
 				string savePath = Path.ChangeExtension(Path.Combine(root, excelInfo.classTableName), helper.Extensions);
 				Debug.Log(path + "\n" + savePath);
-				helper.Export(savePath, dic, null);
+				helper.Export(savePath, dic, Path.GetFileNameWithoutExtension(savePath));
 			}
 
 			var tables = Directory.GetFiles(root, "*.*").ToArray();
