@@ -27,13 +27,19 @@ public partial class AudioInfo : DataInfo<int>
 	public static explicit operator AudioInfo(Dictionary<string, object> other)
 	{
 		var val_ = new AudioInfo();
-		val_.id = other.ContainsKey("id") ? (int)other["id"] : default;
-		val_.path = other.ContainsKey("path") ? (string)other["path"] : default;
+		val_.id = other.TryGetValue(nameof(id), out object id_value) ? (int)id_value : default;
+		val_.path = other.TryGetValue(nameof(path), out object path_value) ? (string)path_value : default;
 		val_.OnConstruction();
 		return val_;
 	}
+	public override void Read(System.Data.IDataReader reader)
+	{
+		id = int.TryParse(reader.GetString(reader.GetOrdinal(nameof(id))), out int id_value) ? id_value : default;
+		path = reader.GetString(reader.GetOrdinal(nameof(path)));
+		OnConstruction();
+	}
 }
-public interface IData {}
+public interface IData { }
 [Serializable]
 public partial class AudioTable : DataTable<int, AudioInfo>, IData
 {
@@ -41,5 +47,5 @@ public partial class AudioTable : DataTable<int, AudioInfo>, IData
 
 public partial class TableManager
 {
-	public  AudioTable AudioTable { get; private set; }
+	public AudioTable AudioTable { get; private set; }
 }
