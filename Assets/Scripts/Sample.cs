@@ -58,9 +58,6 @@ public partial class LoadBin : IDisposable
 	public LoadBin()
 	{
 		path = Path.Combine(Application.persistentDataPath, "data.bin");
-		var textAsset = Resources.Load<TextAsset>("data.bin");
-		File.WriteAllBytes(path, textAsset.bytes);
-		Resources.UnloadAsset(textAsset);
 	}
 	void IDisposable.Dispose()
 	{
