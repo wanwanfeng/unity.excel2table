@@ -161,7 +161,8 @@ namespace Excel
 			}
 
 			var tables = Directory.GetFiles(root, "*.*").ToArray();
-			FileHelper.GZIP.Serialize(tables, "Assets/Resources/data.bin.bytes");
+			FileHelper.GZIP.Serialize(tables, Path.Combine(Application.persistentDataPath, "data.bin"));
+			EditorUtility.RevealInFinder(Application.persistentDataPath);
 		}
 
         /// <summary>
