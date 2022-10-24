@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -13,15 +14,18 @@ namespace Excel
     {
         public partial class Xml : ImpHelper
         {
+            public int count { get; set; }
             public string Extensions { get { return ".xml"; } }
-
-            object ImpHelper.ProcessData<T>(object obj)
+            IEnumerable ImpHelper.ProcessData<T>(object obj)
             {
-                if (!(obj is byte[] bytes)) return null;
-                XmlSerializer xmlserializer = new XmlSerializer(typeof(List<T>));
-                using (MemoryStream xmlstream = new MemoryStream(bytes))
-                using (XmlReader xmlreader = XmlReader.Create(xmlstream))
-                    return xmlserializer.Deserialize(xmlreader) as List<T>;
+                if (obj is byte[] bytes)
+                {
+                    XmlSerializer xmlserializer = new XmlSerializer(typeof(List<T>));
+                    using (MemoryStream xmlstream = new MemoryStream(bytes))
+                    using (XmlReader xmlreader = XmlReader.Create(xmlstream))
+                        foreach (var item in xmlserializer.Deserialize(xmlreader) as List<T>)
+                            yield return item;
+                }
             }
 
             void ImpHelper.Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName)

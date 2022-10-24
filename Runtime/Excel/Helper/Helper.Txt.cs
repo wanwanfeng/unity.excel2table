@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Xml;
@@ -9,41 +10,39 @@ namespace Excel
     {
         public partial class Txt : ImpHelper
         {
+            public int count { get; set; }
             public string Extensions { get { return ".txt"; } }
-            object ImpHelper.ProcessData<T>(object obj)
+            IEnumerable ImpHelper.ProcessData<T>(object obj)
             {
-                if (!(obj is byte[] bytes)) return null;
-                var content = System.Text.Encoding.UTF8.GetString(bytes);
-                return Import<T>(content);
-            }
-            List<T> Import<T>(string content)
-            {
-                List<T> list = new List<T>();
-                if (string.IsNullOrEmpty(content)) return list;
-                string[] results = content.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
-
-                T classInstance = default(T);
-                foreach (var line in results)
+                if (obj is byte[] bytes)
                 {
-                    if (line.StartsWith("#BEGIN"))
+                    var content = System.Text.Encoding.UTF8.GetString(bytes);
+                    if (string.IsNullOrEmpty(content)) yield return null;
+
+                    string[] results = content.Split(new char[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries);
+
+                    T classInstance = default(T);
+                    foreach (var line in results)
                     {
-                        classInstance = Activator.CreateInstance<T>();
-                        continue;
+                        if (line.StartsWith("#BEGIN"))
+                        {
+                            classInstance = Activator.CreateInstance<T>();
+                            continue;
+                        }
+                        if (line.StartsWith("#END"))
+                        {
+                            yield return classInstance;
+                            continue;
+                        }
+                        var result = line.Split(':');
+                        if (result.Length != 2)
+                            continue;
+                        var fileInfo = typeof(T).GetField(result[0]);
+                        if (fileInfo == null)
+                            continue;
+                        fileInfo.SetValue(classInstance, result[1], fileInfo.FieldType);
                     }
-                    if (line.StartsWith("#END"))
-                    {
-                        list.Add(classInstance);
-                        continue;
-                    }
-                    var result = line.Split(':');
-                    if (result.Length != 2)
-                        continue;
-                    var fileInfo = typeof(T).GetField(result[0]);
-                    if (fileInfo == null)
-                        continue;
-                    fileInfo.SetValue(classInstance, result[1], fileInfo.FieldType);
                 }
-                return list;
             }
 
             void ImpHelper.Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName)

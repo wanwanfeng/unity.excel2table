@@ -1,17 +1,18 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Xml;
 using LitJson;
 
 namespace Excel
 {
     public interface ImpHelper
     {
+        int count { get; set; }
         string Extensions { get; }
-        object ProcessData<T>(object obj);
+        IEnumerable ProcessData<T>(object obj);
         void Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName);
     }
 

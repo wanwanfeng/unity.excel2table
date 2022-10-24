@@ -1,7 +1,7 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
-using System.Xml;
 
 namespace Excel
 {
@@ -9,57 +9,52 @@ namespace Excel
     {
         public partial class Bytes : ImpHelper
         {
+            public int count { get; set; }
             public string Extensions { get { return ".bytes"; } }
-
-            object ImpHelper.ProcessData<T>(object obj)
+            IEnumerable ImpHelper.ProcessData<T>(object obj)
             {
-                if (!(obj is byte[] bytes)) return null;
-                return Import<T>(bytes);
-            }
-
-            List<T> Import<T>(byte[] content)
-            {
-                List<T> list = new List<T>();
-                if (content.Length == 0) return list;
-
-                using (var ms = new MemoryStream(content))
+                if (obj is byte[] bytes)
                 {
-                    using (var br = new BinaryReader(ms))
+                    if (bytes.Length == 0) yield return null;
+
+                    using (var ms = new MemoryStream(bytes))
                     {
-                        var count = br.ReadInt32();
-                        var length = br.ReadInt32();
+                        using (var br = new BinaryReader(ms))
+                        {
+                            var count = br.ReadInt32();
+                            var length = br.ReadInt32();
 
-                        var fieldList = new List<string>();
-                        var typeList = new List<string>();
-                        for (var i = 0; i < length; i++)
-                        {
-                            fieldList.Add(br.ReadString());
-                            typeList.Add(br.ReadString());
-                        }
-                        for (var i = 0; i < count; i++)
-                        {
-                            T classInstance = Activator.CreateInstance<T>();
-                            for (var j = 0; j < length; j++)
+                            var fieldList = new List<string>();
+                            var typeList = new List<string>();
+                            for (var i = 0; i < length; i++)
                             {
-                                var field = fieldList[j];
-                                var type = typeList[j];
-
-                                var fileInfo = typeof(T).GetField(field);
-                                if (fileInfo == null)
-                                {
-                                    //跳过不存在的字段值以保持偏移
-                                    br.ReadValue(type);
-                                }
-                                else
-                                {
-                                    fileInfo.SetValue(classInstance, br, fileInfo.FieldType);
-                                }
+                                fieldList.Add(br.ReadString());
+                                typeList.Add(br.ReadString());
                             }
-                            list.Add(classInstance);
+                            for (var i = 0; i < count; i++)
+                            {
+                                T classInstance = Activator.CreateInstance<T>();
+                                for (var j = 0; j < length; j++)
+                                {
+                                    var field = fieldList[j];
+                                    var type = typeList[j];
+
+                                    var fileInfo = typeof(T).GetField(field);
+                                    if (fileInfo == null)
+                                    {
+                                        //跳过不存在的字段值以保持偏移
+                                        br.ReadValue(type);
+                                    }
+                                    else
+                                    {
+                                        fileInfo.SetValue(classInstance, br, fileInfo.FieldType);
+                                    }
+                                }
+                                yield return classInstance;
+                            }
                         }
                     }
                 }
-                return list;
             }
 
             void ImpHelper.Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName)

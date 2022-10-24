@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,9 +11,10 @@ namespace Excel
     {
         public partial class Asset : ImpHelper
         {
+            public int count { get; set; }
             public string Extensions { get { return ".asset"; } }
 
-            object ImpHelper.ProcessData<T>(object obj)
+            IEnumerable ImpHelper.ProcessData<T>(object obj)
             {
                 //var table = obj as DataTableAsset<TK, T>;
                 //return table == null ? null : table.List;

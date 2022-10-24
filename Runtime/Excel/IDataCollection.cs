@@ -4,14 +4,15 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using UnityEngine;
 
 namespace Excel
 {
 
-    public interface IDataInfo<T>
-    {
-        T GetPrimaryKey();
+	public interface IDataInfo<T>
+	{
+		T GetPrimaryKey();
     }
 
     public abstract class DataInfo<T> : IDataInfo<T>
@@ -70,21 +71,15 @@ namespace Excel
 
 		IEnumerator IDataCollection.Load(ImpHelper helper, object obj)
 		{
-			if (helper.ProcessData<T>(obj) is List<T> list)
+			foreach (var item in helper.ProcessData<T>(obj).OfType<T>())
 			{
-				foreach (var item in list)
-				{
-					Add(item);
-				}
-            }
-            else
-            {
-				throw new Exception("类型错误！");
-            }
+				Add(item);
+				helper.count++;
+				if (helper.count % 5000 == 0) Thread.Sleep(0);
+				if (helper.count % 3000 == 0) yield return null;
+			}
 
 			ReviseFunc?.Invoke();
-
-			yield break;
 		}
 
         protected new T this[TK id]

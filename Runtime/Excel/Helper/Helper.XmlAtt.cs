@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -12,46 +13,42 @@ namespace Excel
 
         public partial class XmlAtt : ImpHelper
         {
+            public int count { get; set; }
             public string Extensions { get { return ".xml"; } }
-            object ImpHelper.ProcessData<T>(object obj)
+            IEnumerable ImpHelper.ProcessData<T>(object obj)
             {
-                if (!(obj is byte[] bytes)) return null;
-                var content = System.Text.Encoding.UTF8.GetString(bytes);
-                return Import<T>(content);
-            }
-
-            List<T> Import<T>(string content)
-            {
-                var list = new List<T>();
-                if (string.IsNullOrEmpty(content)) return list;
-
-                var document = new XmlDocument();
-                document.LoadXml(content);
-
-                var root = document.DocumentElement;
-                if (root == null) return list;
-
-                var table = root.SelectNodes("Table");
-                if (table == null) return list;
-
-                foreach (XmlElement node in table)
+                if (obj is byte[] bytes)
                 {
-                    if (!node.HasAttributes)
+                    var content = System.Text.Encoding.UTF8.GetString(bytes);
+                    if (string.IsNullOrEmpty(content)) yield return null;
+
+                    var document = new XmlDocument();
+                    document.LoadXml(content);
+
+                    var root = document.DocumentElement;
+                    if (root == null) yield return null;
+
+                    var table = root.SelectNodes("Table");
+                    if (table == null) yield return null;
+
+                    foreach (XmlElement node in table)
                     {
-                        continue;
-                    }
-                    T classInstance = Activator.CreateInstance<T>();
-                    var fieldInfos = typeof(T).GetFields();
-                    foreach (var fieldInfo in fieldInfos)
-                    {
-                        if (node.HasAttribute(fieldInfo.Name))
+                        if (!node.HasAttributes)
                         {
-                            fieldInfo.SetValue(classInstance, node.GetAttribute(fieldInfo.Name), fieldInfo.FieldType);
+                            continue;
                         }
+                        T classInstance = Activator.CreateInstance<T>();
+                        var fieldInfos = typeof(T).GetFields();
+                        foreach (var fieldInfo in fieldInfos)
+                        {
+                            if (node.HasAttribute(fieldInfo.Name))
+                            {
+                                fieldInfo.SetValue(classInstance, node.GetAttribute(fieldInfo.Name), fieldInfo.FieldType);
+                            }
+                        }
+                        yield return classInstance;
                     }
-                    list.Add(classInstance);
                 }
-                return list;
             }
 
             void ImpHelper.Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName)

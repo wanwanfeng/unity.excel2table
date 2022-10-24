@@ -1,5 +1,6 @@
 using LitJson;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -11,13 +12,20 @@ namespace Excel
     {
         public partial class Json : ImpHelper
         {
+            public int count { get; set; }
             public string Extensions { get { return ".json"; } }
-            object ImpHelper.ProcessData<T>(object obj)
+            IEnumerable ImpHelper.ProcessData<T>(object obj)
             {
-                if (!(obj is byte[] bytes)) return null;
-                var content = System.Text.Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
-                //Debug.Log(content);
-                return JsonMapper.ToObject<List<T>>(content.Trim('\r', '\n'));
+                if (obj is byte[] bytes)
+                {
+                    var content = Encoding.UTF8.GetString(bytes, 3, bytes.Length - 3);
+                    if (string.IsNullOrEmpty(content)) yield return null;
+
+                    foreach (var item in JsonMapper.ToObject<List<T>>(content.Trim('\r', '\n')))
+                    {
+                        yield return item;
+                    }
+                }
             }
 
             void ImpHelper.Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName)
