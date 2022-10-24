@@ -30,6 +30,7 @@ public partial class Sample : MonoBehaviour
 			{
 				dict = dict.ToDictionary(p => Path.GetFileNameWithoutExtension(p.Key), p => p.Value);
 
+				helper.count = 0;
 				foreach (var pair in dictionary)
 				{
 					if (dict.TryGetValue(pair.Key.Name, out byte[] bytes))
