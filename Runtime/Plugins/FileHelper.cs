@@ -220,6 +220,7 @@ public class FileHelper
 			using (FileStream fileStream = new FileStream(fileName, FileMode.Open, FileAccess.Read, FileShare.Read))
 			using (GZipStream decompressedStream = new GZipStream(fileStream, CompressionMode.Decompress))
 			using (StreamReader reader = new StreamReader(decompressedStream))
+                while (!reader.EndOfStream)
 				yield return reader.ReadLine();
 		}
 	}
