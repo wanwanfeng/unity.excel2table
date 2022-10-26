@@ -75,7 +75,7 @@ namespace Excel
 
 			foreach (ExcelInfo excelInfo in content.OrderBy(p => p.excelName))
 			{
-				var result = YeildReturnLine(excelInfo.excelFullPath, excelInfo.sheet).ToList();
+				var result = YeildReturnLine(excelInfo.excelFullPath, excelInfo.sheet).OfType<List<Cell>>().ToList();
 				if (result.Count == 0) continue;
 
 				string keyType = result[0].FirstOrDefault(p => p.name == "id").type;
@@ -230,60 +230,67 @@ namespace Excel
             }
         }
 
-		private static IEnumerable<List<Cell>> YeildReturnLine(string path, int sheet)
+		private static IEnumerable YeildReturnLine(string path, int sheet)
 		{
 			//using (var dd = new MS_GetConnection(path))
 			using (var dd = new TT_GetTable(path))
 			{
 				DataRowCollection rowCollection = dd.GetDataRowCollection(sheet);
-				int curHang = 0;
+				IEnumerator<DataRow> enumerator = rowCollection.GetEnumerator() as IEnumerator<DataRow>;
 
-				//描述行信息
-				var remarks = rowCollection[curHang++].ItemArray;
-				//名称行信息
-				var names = rowCollection[curHang++].ItemArray;
-				for (var i = 0; i < names.Length; i++)
+				while (enumerator.MoveNext())
 				{
-					if (names[i] != null && !string.IsNullOrEmpty(names[i].ToString())) continue;
-					Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Length, Path.GetFileName(path));
-					yield break;
-				}
+					var remarks = enumerator.Current.ItemArray;//描述行信息
 
-				//类型行信息
-				var types = rowCollection[curHang++].ItemArray;
-				for (var i = 0; i < types.Length; i++)
-				{
-					if (types[i] != null && !string.IsNullOrEmpty(types[i].ToString())) continue;
-					Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Length, Path.GetFileName(path));
-					yield break;
-				}
-
-				//值行信息
-				for (var j = curHang++; j < rowCollection.Count; j++)
-				{
-					var cells = rowCollection[j].ItemArray;
-					if (string.IsNullOrEmpty(cells[0].ToString()))
+					enumerator.MoveNext();
+					var names = enumerator.Current.ItemArray;//名称行信息
+					for (var i = 0; i < names.Length; i++)
 					{
-						continue; //首格为空时此行跳过
+						if (names[i] != null && !string.IsNullOrEmpty(names[i].ToString())) continue;
+						Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Length, Path.GetFileName(path));
+						yield break;
 					}
-					var rowresult = new List<Cell>();
-					for (var i = 0; i < cells.Length; i++)
+
+					enumerator.MoveNext();
+					var types = enumerator.Current.ItemArray;//类型行信息
+					for (var i = 0; i < types.Length; i++)
 					{
-						if (cells[i] == null) continue;
-						if (types[i].ToString().StartsWith("#") || names[i].ToString().StartsWith("#"))
+						if (types[i] != null && !string.IsNullOrEmpty(types[i].ToString())) continue;
+						Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Length, Path.GetFileName(path));
+						yield break;
+					}
+
+					while (enumerator.MoveNext())
+					{
+						var cells = enumerator.Current.ItemArray;//值行信息
+						if (string.IsNullOrEmpty(cells[0].ToString()))
 						{
-							//备注列（不属于有效数据）
-							continue;
+							continue; //首格为空时此行跳过
 						}
-						rowresult.Add(new Cell
+						var rowresult = new List<Cell>();
+						for (var i = 0; i < cells.Length; i++)
 						{
-							remark = remarks[i].ToString(),
-							name = names[i].ToString(),
-							type = types[i].ToString(),
-							value = cells[i].ToString()
-						});
+							if (cells[i] == null) continue;
+							if (types[i].ToString().StartsWith("#") || names[i].ToString().StartsWith("#"))
+							{
+								//备注列（不属于有效数据）
+								continue;
+							}
+							rowresult.Add(new Cell
+							{
+								remark = remarks[i].ToString(),
+								name = names[i].ToString(),
+								type = types[i].ToString(),
+								value = cells[i].ToString()
+							});
+						}
+						yield return rowresult;
+
+						yield return remarks;
+						yield return names;
+						yield return types;
+						yield return cells;
 					}
-					yield return rowresult;
 				}
 			}
 		}
