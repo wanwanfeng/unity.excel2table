@@ -239,37 +239,37 @@ namespace Excel
 				int curHang = 0;
 
 				//描述行信息
-				var remarks = rowCollection[curHang++].ItemArray.ToList();
+				var remarks = rowCollection[curHang++].ItemArray;
 				//名称行信息
-				var names = rowCollection[curHang++].ItemArray.ToList();
-				for (var i = 0; i < names.Count; i++)
+				var names = rowCollection[curHang++].ItemArray;
+				for (var i = 0; i < names.Length; i++)
 				{
 					if (names[i] != null && !string.IsNullOrEmpty(names[i].ToString())) continue;
-					Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Count, Path.GetFileName(path));
+					Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Length, Path.GetFileName(path));
 					yield break;
 				}
 
 				//类型行信息
-				var types = rowCollection[curHang++].ItemArray.ToList();
-				for (var i = 0; i < types.Count; i++)
+				var types = rowCollection[curHang++].ItemArray;
+				for (var i = 0; i < types.Length; i++)
 				{
 					if (types[i] != null && !string.IsNullOrEmpty(types[i].ToString())) continue;
-					Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Count, Path.GetFileName(path));
+					Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Length, Path.GetFileName(path));
 					yield break;
 				}
 
 				//值行信息
 				for (var j = curHang++; j < rowCollection.Count; j++)
 				{
-					var rows = rowCollection[j].ItemArray.ToList();
-					if (string.IsNullOrEmpty(rows[0].ToString()))
+					var cells = rowCollection[j].ItemArray;
+					if (string.IsNullOrEmpty(cells[0].ToString()))
 					{
 						continue; //首格为空时此行跳过
 					}
 					var rowresult = new List<Cell>();
-					for (var i = 0; i < rows.Count; i++)
+					for (var i = 0; i < cells.Length; i++)
 					{
-						if (rows[i] == null) continue;
+						if (cells[i] == null) continue;
 						if (types[i].ToString().StartsWith("#") || names[i].ToString().StartsWith("#"))
 						{
 							//备注列（不属于有效数据）
@@ -280,7 +280,7 @@ namespace Excel
 							remark = remarks[i].ToString(),
 							name = names[i].ToString(),
 							type = types[i].ToString(),
-							value = rows[i].ToString()
+							value = cells[i].ToString()
 						});
 					}
 					yield return rowresult;
