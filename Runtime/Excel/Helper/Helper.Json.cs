@@ -3,6 +3,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Xml;
 
@@ -39,6 +40,29 @@ namespace Excel
                     {
                         writer.WriteObjectStart();
                         foreach (var cell in pair.Value)
+                        {
+                            writer.WritePropertyName(cell.name);
+                            writer.Write(cell.value, cell.type);
+                        }
+                        writer.WriteObjectEnd();
+                    }
+                    writer.WriteArrayEnd();
+
+                    File.WriteAllText(savePath, writer.TextWriter.ToString(), Encoding.UTF8);
+                }
+            }
+
+            void ImpHelper.Export(string savePath, IEnumerable enumerable, string tableName)
+            {
+                using (StringWriter sw = new StringWriter())
+                {
+                    JsonWriter writer = new JsonWriter(sw);
+
+                    writer.WriteArrayStart();
+                    foreach (var list in enumerable.OfType<List<Cell>>())
+                    {
+                        writer.WriteObjectStart();
+                        foreach (var cell in list)
                         {
                             writer.WritePropertyName(cell.name);
                             writer.Write(cell.value, cell.type);

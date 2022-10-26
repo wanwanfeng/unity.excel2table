@@ -140,6 +140,28 @@ namespace Excel
 
                 xmlDoc.Save(savePath);
             }
+
+            void ImpHelper.Export(string savePath, IEnumerable enumerable, string tableName)
+            {
+                FileInfo fileInfo = new FileInfo(savePath);
+                string info = fileInfo.Name.Replace(fileInfo.Extension, "").Replace("Table", "Info");
+
+                var array = enumerable.OfType<List<Cell>>().Select(item =>
+                {
+                    return new XElement(info,
+                           item.Select(p =>
+                           {
+                               return new XElement(p.name, p.value);
+                           }).ToArray());
+                }).ToArray();
+
+                var doc = new XDocument(
+                    new XDeclaration("1.0", "UTF-8", ""),
+                    new XElement("ArrayOf" + info, array)
+                );
+                doc.Save(savePath);
+                return;
+            }
         }
     }
 }

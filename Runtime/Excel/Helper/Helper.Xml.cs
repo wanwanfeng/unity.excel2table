@@ -87,6 +87,21 @@ namespace Excel
                 xmlDoc.Save(savePath);
             }
 
+            void ImpHelper.Export(string savePath, IEnumerable enumerable, string tableName)
+            {
+                var array = enumerable.OfType<List<Cell>>()
+                    .Select(item =>
+                    {
+                        return new XElement("Table", item.Select(p => { return new XAttribute(p.name, p.value); }).ToArray());
+                    }).ToArray();
+
+                var doc = new XDocument(
+                    new XDeclaration("1.0", "UTF-8", ""),
+                    new XElement("Root", array)
+                );
+                doc.Save(savePath);
+                return;
+            }
         }
     }
 }

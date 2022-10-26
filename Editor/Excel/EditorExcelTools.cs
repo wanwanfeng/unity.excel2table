@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
@@ -74,10 +75,10 @@ namespace Excel
 
 			foreach (ExcelInfo excelInfo in content.OrderBy(p => p.excelName))
 			{
-				var dic = GetDictionary(excelInfo.excelFullPath, excelInfo.sheet);
-				if (dic.Count == 0) continue;
+				var result = YeildReturnLine(excelInfo.excelFullPath, excelInfo.sheet).ToList();
+				if (result.Count == 0) continue;
 
-				string keyType = dic[0].FirstOrDefault(p => p.name == "id").type;
+				string keyType = result[0].FirstOrDefault(p => p.name == "id").type;
 
 				//创建DataInfo
 				sb.AppendLine("");
@@ -85,7 +86,7 @@ namespace Excel
 				sb.AppendLine($"public partial class {excelInfo.classInfoName} : DataInfo<{keyType}>");
 				sb.AppendLine("{");
 				{
-					foreach (var cell in dic[0])
+					foreach (var cell in result[0])
 					{
 						sb.Append("\t"); sb.AppendLine($"[Description(\"{cell.remark.Replace("\n", "")}\")]");
 						sb.Append("\t"); sb.AppendLine($"public {cell.type} {cell.name};");
@@ -102,7 +103,7 @@ namespace Excel
 					//创建DataInfo.Copy
 					sb.Append("\t"); sb.AppendLine($"public {excelInfo.classInfoName} Copy({excelInfo.classInfoName} other)");
 					sb.Append("\t"); sb.AppendLine("{");
-					foreach (var cell in dic[0])
+					foreach (var cell in result[0])
 					{
 						sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"this.{cell.name} = other.{cell.name};");
 					}
@@ -115,7 +116,7 @@ namespace Excel
 					sb.Append("\t"); sb.AppendLine($"public static explicit operator {excelInfo.classInfoName}(Dictionary<string, object> other)");
 					sb.Append("\t"); sb.AppendLine("{");
 					sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"var val_ = new {excelInfo.classInfoName}();");
-					foreach (var cell in dic[0])
+					foreach (var cell in result[0])
 					{
 						sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"val_.{cell.name} = other.ContainsKey(\"{cell.name}\") ? ({cell.type})other[\"{cell.name}\"] : default;");
 					}
@@ -153,11 +154,9 @@ namespace Excel
 			foreach (var excelInfo in content)
 			{
 				string path = excelInfo.excelFullPath;
-				var dic = GetDictionary(path, excelInfo.sheet);
-				if (dic.Count == 0) continue;
 				string savePath = Path.ChangeExtension(Path.Combine(root, excelInfo.classTableName), helper.Extensions);
 				Debug.Log(path + "\n" + savePath);
-				helper.Export(savePath, dic, Path.GetFileNameWithoutExtension(savePath));
+				helper.Export(savePath, YeildReturnLine(path, excelInfo.sheet), Path.GetFileNameWithoutExtension(savePath));
 			}
 
 			var tables = Directory.GetFiles(root, "*.*").ToArray();
@@ -230,6 +229,64 @@ namespace Excel
                 return dic;
             }
         }
+
+		private static IEnumerable<List<Cell>> YeildReturnLine(string path, int sheet)
+		{
+			//using (var dd = new MS_GetConnection(path))
+			using (var dd = new TT_GetTable(path))
+			{
+				DataRowCollection rowCollection = dd.GetDataRowCollection(sheet);
+				int curHang = 0;
+
+				//描述行信息
+				var remarks = rowCollection[curHang++].ItemArray.ToList();
+				//名称行信息
+				var names = rowCollection[curHang++].ItemArray.ToList();
+				for (var i = 0; i < names.Count; i++)
+				{
+					if (names[i] != null && !string.IsNullOrEmpty(names[i].ToString())) continue;
+					Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Count, Path.GetFileName(path));
+					yield break;
+				}
+
+				//类型行信息
+				var types = rowCollection[curHang++].ItemArray.ToList();
+				for (var i = 0; i < types.Count; i++)
+				{
+					if (types[i] != null && !string.IsNullOrEmpty(types[i].ToString())) continue;
+					Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Count, Path.GetFileName(path));
+					yield break;
+				}
+
+				//值行信息
+				for (var j = curHang++; j < rowCollection.Count; j++)
+				{
+					var rows = rowCollection[j].ItemArray.ToList();
+					if (string.IsNullOrEmpty(rows[0].ToString()))
+					{
+						continue; //首格为空时此行跳过
+					}
+					var rowresult = new List<Cell>();
+					for (var i = 0; i < rows.Count; i++)
+					{
+						if (rows[i] == null) continue;
+						if (types[i].ToString().StartsWith("#") || names[i].ToString().StartsWith("#"))
+						{
+							//备注列（不属于有效数据）
+							continue;
+						}
+						rowresult.Add(new Cell
+						{
+							remark = remarks[i].ToString(),
+							name = names[i].ToString(),
+							type = types[i].ToString(),
+							value = rows[i].ToString()
+						});
+					}
+					yield return rowresult;
+				}
+			}
+		}
 	}
 
 	public class GetTable

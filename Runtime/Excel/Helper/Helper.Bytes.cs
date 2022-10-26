@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace Excel
 {
@@ -77,6 +78,34 @@ namespace Excel
                             }
                         }
                         foreach (var cell in pair.Value)
+                        {
+                            bw.Write(cell.value, cell.type);
+                        }
+                    }
+                }
+            }
+
+            void ImpHelper.Export(string savePath, IEnumerable enumerable, string tableName)
+            {
+                using (FileStream sw = new FileStream(savePath, FileMode.Create))
+                using (BinaryWriter bw = new BinaryWriter(sw))
+                {
+                    var result = enumerable.OfType<List<Cell>>().ToList();
+                    bw.Write(result.Count);
+                    bool init = false;
+                    foreach (var list in result)
+                    {
+                        if (!init)
+                        {
+                            init = true;
+                            bw.Write(list.Count);
+                            foreach (var cell in list)
+                            {
+                                bw.Write(cell.name);
+                                bw.Write(cell.type); //写入是为了读取时发现不存在的字段时跳过以保持偏移
+                            }
+                        }
+                        foreach (var cell in list)
                         {
                             bw.Write(cell.value, cell.type);
                         }

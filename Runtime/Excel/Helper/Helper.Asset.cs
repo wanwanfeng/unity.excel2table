@@ -55,6 +55,11 @@ namespace Excel
                 UnityEditor.AssetDatabase.SaveAssets();
 #endif
             }
+
+            void ImpHelper.Export(string savePath, IEnumerable enumerable, string tableName)
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

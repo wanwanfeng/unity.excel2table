@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 
 namespace Excel
@@ -53,6 +54,22 @@ namespace Excel
                     {
                         sw.WriteLine("#BEGIN");
                         foreach (var cell in pair.Value)
+                        {
+                            sw.WriteLine(cell.name + ":" + cell.value);
+                        }
+                        sw.WriteLine("#END");
+                    }
+                }
+            }
+
+            void ImpHelper.Export(string savePath, IEnumerable enumerable, string tableName)
+            {
+                using (StreamWriter sw = new StreamWriter(savePath))
+                {
+                    foreach (var list in enumerable.OfType<List<Cell>>())
+                    {
+                        sw.WriteLine("#BEGIN");
+                        foreach (var cell in list)
                         {
                             sw.WriteLine(cell.name + ":" + cell.value);
                         }

@@ -14,6 +14,7 @@ namespace Excel
         string Extensions { get; }
         IEnumerable ProcessData<T>(object obj);
         void Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName);
+        void Export(string savePath, IEnumerable enumerable, string tableName);
     }
 
     public static partial class HelperExtensions

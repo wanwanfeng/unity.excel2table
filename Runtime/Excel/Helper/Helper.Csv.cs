@@ -60,6 +60,24 @@ namespace Excel
                     }
                 }
             }
+
+            void ImpHelper.Export(string savePath, IEnumerable enumerable, string tableName)
+            {
+                using (StreamWriter sw = new StreamWriter(savePath))
+                {
+                    bool init = false;
+                    foreach (var list in enumerable.OfType<List<Cell>>())
+                    {
+                        if (!init)
+                        {
+                            init = true;
+                            sw.WriteLine(string.Join(",", list.Select(p => p.name).ToArray()));
+                            sw.WriteLine(string.Join(",", list.Select(p => p.type).ToArray()));
+                        }
+                        sw.WriteLine(string.Join(",", list.Select(p => p.value).ToArray()));
+                    }
+                }
+            }
         }
     }
 }
