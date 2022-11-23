@@ -10,7 +10,7 @@ using UnityEngine;
 
 namespace Excel
 {
-    public partial class EditorExcelTools
+	public partial class EditorExcelTools
 	{
 		//设定配表方式
 		static Excel.ImpHelper helper => Sample.helper;
@@ -178,23 +178,23 @@ namespace Excel
                 DataRowCollection rowCollection = dd.GetDataRowCollection(sheet);
                 int curHang = 0;
 
-                //描述行信息
-                var remarks = rowCollection[curHang++].ItemArray.ToList();
+				//描述行信息
+				var remarks = Array.ConvertAll(rowCollection[curHang++].ItemArray, p => p.ToString());
                 //名称行信息
-                var names = rowCollection[curHang++].ItemArray.ToList();
-                for (var i = 0; i < names.Count; i++)
+                var names = Array.ConvertAll(rowCollection[curHang++].ItemArray, p => p.ToString());
+                for (var i = 0; i < names.Length; i++)
                 {
                     if (names[i] != null && !string.IsNullOrEmpty(names[i].ToString())) continue;
-                    Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Count, Path.GetFileName(path));
+                    Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Length, Path.GetFileName(path));
                     return null;
                 }
 
                 //类型行信息
-                var types = rowCollection[curHang++].ItemArray.ToList();
-                for (var i = 0; i < types.Count; i++)
+                var types = Array.ConvertAll(rowCollection[curHang++].ItemArray, p => p.ToString());
+                for (var i = 0; i < types.Length; i++)
                 {
                     if (types[i] != null && !string.IsNullOrEmpty(types[i].ToString())) continue;
-                    Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Count, Path.GetFileName(path));
+                    Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Length, Path.GetFileName(path));
                     return null;
                 }
 
@@ -202,13 +202,13 @@ namespace Excel
                 //值行信息
                 for (var j = curHang++; j < rowCollection.Count; j++)
                 {
-                    var rows = rowCollection[j].ItemArray.ToList();
-                    if (string.IsNullOrEmpty(rows[0].ToString()))
+                    var rows = Array.ConvertAll(rowCollection[j].ItemArray, p => p.ToString());
+					if (string.IsNullOrEmpty(rows[0].ToString()))
                     {
                         continue; //首格为空时此行跳过
                     }
                     var rowresult = new List<Cell>();
-                    for (var i = 0; i < rows.Count; i++)
+                    for (var i = 0; i < rows.Length; i++)
                     {
                         if (rows[i] == null) continue;
                         if (types[i].ToString().StartsWith("#") || names[i].ToString().StartsWith("#"))
@@ -240,30 +240,30 @@ namespace Excel
 
 				while (enumerator.MoveNext())
 				{
-					var remarks = enumerator.Current.ItemArray;//描述行信息
+					var remarks = Array.ConvertAll(enumerator.Current.ItemArray, p => p.ToString());//描述行信息
 
 					enumerator.MoveNext();
-					var names = enumerator.Current.ItemArray;//名称行信息
+					var names = Array.ConvertAll(enumerator.Current.ItemArray, p => p.ToString());//名称行信息
 					for (var i = 0; i < names.Length; i++)
 					{
-						if (names[i] != null && !string.IsNullOrEmpty(names[i].ToString())) continue;
+						if (names[i] != null && !string.IsNullOrEmpty(names[i])) continue;
 						Debug.LogErrorFormat("{3}:变量名称有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 0 + 2, i + 1, names.Length, Path.GetFileName(path));
 						yield break;
 					}
 
 					enumerator.MoveNext();
-					var types = enumerator.Current.ItemArray;//类型行信息
+					var types = Array.ConvertAll(enumerator.Current.ItemArray, p => p.ToString());//类型行信息
 					for (var i = 0; i < types.Length; i++)
 					{
-						if (types[i] != null && !string.IsNullOrEmpty(types[i].ToString())) continue;
+						if (types[i] != null && !string.IsNullOrEmpty(types[i])) continue;
 						Debug.LogErrorFormat("{3}:变量类型有空余项！\n错误位置在坐标(行：{0}、列：{1})处！共应该有{2}个变量名称！", 1 + 2, i + 1, types.Length, Path.GetFileName(path));
 						yield break;
 					}
 
 					while (enumerator.MoveNext())
 					{
-						var cells = enumerator.Current.ItemArray;//值行信息
-						if (string.IsNullOrEmpty(cells[0].ToString()))
+						var cells = Array.ConvertAll(enumerator.Current.ItemArray, p => p.ToString());//值行信息
+						if (string.IsNullOrEmpty(cells[0]))
 						{
 							continue; //首格为空时此行跳过
 						}
@@ -271,17 +271,17 @@ namespace Excel
 						for (var i = 0; i < cells.Length; i++)
 						{
 							if (cells[i] == null) continue;
-							if (types[i].ToString().StartsWith("#") || names[i].ToString().StartsWith("#"))
+							if (types[i].StartsWith("#") || names[i].StartsWith("#"))
 							{
 								//备注列（不属于有效数据）
 								continue;
 							}
 							rowresult.Add(new Cell
 							{
-								remark = remarks[i].ToString(),
-								name = names[i].ToString(),
-								type = types[i].ToString(),
-								value = cells[i].ToString()
+								remark = remarks[i],
+								name = names[i],
+								type = types[i],
+								value = cells[i]
 							});
 						}
 						yield return rowresult;
