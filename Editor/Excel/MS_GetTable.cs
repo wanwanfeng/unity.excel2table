@@ -13,39 +13,43 @@ namespace Excel
 	/// </summary>
 	public class MS_GetTable : GetTable, IDisposable
 	{
-		System.Data.OleDb.OleDbConnection connection;
-
+		string path;
 		internal System.Data.OleDb.OleDbConnection GetConnection()
 		{
-			return connection;
+			if (File.Exists(path))
+			{
+				var connectionString = "";
+				switch (Path.GetExtension(path))
+				{
+					case ".xls":
+						//Excel2003的连接字符串
+						connectionString =
+							string.Format(
+								"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=\"Excel 8.0;HDR=NO;IMEX=1\"",
+								path); //xls HDR=NO;不忽略第一行 HDR=YES;忽略第一行
+						break;
+					case ".xlsx":
+						//Excel2007的连接字符串  
+						connectionString =
+							string.Format(
+								"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=\"Excel 12.0;HDR=NO;IMEX=1\"",
+								path); //xlsx HDR=NO;不忽略第一行 HDR=YES;忽略第一行
+						break;
+					default:
+						throw new Exception("文件类型错误！！！");
+				}
+				return new System.Data.OleDb.OleDbConnection(connectionString);
+            }
+            else
+            {
+				throw new Exception($"{path} is not found");
+            }
 		}
 
 		public MS_GetTable(string path)
 		{
-			string connectionString = "";
-			switch (Path.GetExtension(path))
-			{
-				case ".xls":
-					//Excel2003的连接字符串
-					connectionString =
-						string.Format(
-							"Provider=Microsoft.Jet.OLEDB.4.0;Data Source={0};Extended Properties=\"Excel 8.0;HDR=NO;IMEX=1\"",
-							path); //xls HDR=NO;不忽略第一行 HDR=YES;忽略第一行
-					break;
-				case ".xlsx":
-					//Excel2007的连接字符串  
-					connectionString =
-						string.Format(
-							"Provider=Microsoft.ACE.OLEDB.12.0;Data Source={0};Extended Properties=\"Excel 12.0;HDR=NO;IMEX=1\"",
-							path); //xlsx HDR=NO;不忽略第一行 HDR=YES;忽略第一行
-					break;
-				default:
-					Debug.Log("文件类型错误！！！");
-					return;
-			}
+			this.path = path;
 			Debug.Log(path);
-
-			connection = new System.Data.OleDb.OleDbConnection(connectionString);
 		}
 
 		//遍历行的集合，取得每一行的DataRow对象
@@ -55,21 +59,23 @@ namespace Excel
 		//共有多少列由第二行第三行列数来决定
 		public override IEnumerable<DataTable> GetDataTable()
 		{
-			connection.Open();
-			var sql = "SELECT * FROM  [Sheet1$]";
-			var adapter = new System.Data.OleDb.OleDbDataAdapter(sql, connection);
-			DataSet dataSet = new DataSet();
-			adapter.Fill(dataSet);
-
-			for (int i = 0; i < dataSet.Tables.Count; i++)
+			using (var connection = GetConnection())
 			{
-				yield return dataSet.Tables[i];
+				connection.Open();
+				var sql = "SELECT * FROM  [Sheet1$]";
+				var adapter = new System.Data.OleDb.OleDbDataAdapter(sql, connection);
+				DataSet dataSet = new DataSet();
+				adapter.Fill(dataSet);
+
+				for (int i = 0; i < dataSet.Tables.Count; i++)
+				{
+					yield return dataSet.Tables[i];
+				}
 			}
 		}
 
 		void IDisposable.Dispose()
 		{
-			connection.Close();
 		}
 
 
@@ -79,16 +85,18 @@ namespace Excel
 		{
 			using (var cc = new MS_GetTable(path))
 			{
-				var connection = cc.GetConnection();
-				string sqlCreate = "CREATE TABLE TestSheet ([ID] INTEGER,[Username] VarChar,[UserPwd] VarChar)";
-				var cmd = new System.Data.OleDb.OleDbCommand(sqlCreate, connection);
-				connection.Open();
-				cmd.ExecuteNonQuery();
-				foreach (KeyValuePair<int, List<Cell>> pair in content)
+				using (var connection = cc.GetConnection())
 				{
-					cmd.CommandText = string.Format("INSERT INTO TestSheet VALUES({0})",
-						string.Join(",", pair.Value.Select(p => p.value).ToArray()));
+					string sqlCreate = "CREATE TABLE TestSheet ([ID] INTEGER,[Username] VarChar,[UserPwd] VarChar)";
+					var cmd = new System.Data.OleDb.OleDbCommand(sqlCreate, connection);
+					connection.Open();
 					cmd.ExecuteNonQuery();
+					foreach (KeyValuePair<int, List<Cell>> pair in content)
+					{
+						cmd.CommandText = string.Format("INSERT INTO TestSheet VALUES({0})",
+							string.Join(",", pair.Value.Select(p => p.value).ToArray()));
+						cmd.ExecuteNonQuery();
+					}
 				}
 			}
 		}
@@ -102,16 +110,18 @@ namespace Excel
 		{
 			using (var cc = new MS_GetTable(path))
 			{
-				var connection = cc.GetConnection();
-				string sqlCreate = "CREATE TABLE TestSheet ([ID] INTEGER,[Username] VarChar,[UserPwd] VarChar)";
-				var cmd = new System.Data.OleDb.OleDbCommand(sqlCreate, connection);
-				connection.Open();
-				cmd.ExecuteNonQuery();
-				foreach (var pair in content)
+				using (var connection = cc.GetConnection())
 				{
-					cmd.CommandText = string.Format("INSERT INTO TestSheet VALUES({0})",
-						string.Join(",", pair.Value.Select(p => p.ToString()).ToArray()));
+					string sqlCreate = "CREATE TABLE TestSheet ([ID] INTEGER,[Username] VarChar,[UserPwd] VarChar)";
+					var cmd = new System.Data.OleDb.OleDbCommand(sqlCreate, connection);
+					connection.Open();
 					cmd.ExecuteNonQuery();
+					foreach (var pair in content)
+					{
+						cmd.CommandText = string.Format("INSERT INTO TestSheet VALUES({0})",
+							string.Join(",", pair.Value.Select(p => p.ToString()).ToArray()));
+						cmd.ExecuteNonQuery();
+					}
 				}
 			}
 		}
@@ -128,32 +138,34 @@ namespace Excel
 
 			using (var cc = new MS_GetTable(path))
 			{
-				var connection = cc.GetConnection();
+				using (var connection = cc.GetConnection())
 				{
-					var pair = content.First();
-					if (pair.GetType().IsClass)
 					{
-						var pair1 = pair;
-						var names = pair.GetType().GetFields().Select(p => p.Name.ToString()).ToArray();
-						var fieldTypes = pair.GetType().GetFields().Select(p => p.FieldType.ToString()).ToArray();
-						Debug.Log(string.Join(",", names));
-						Debug.Log(string.Join(",", fieldTypes));
+						var pair = content.First();
+						if (pair.GetType().IsClass)
+						{
+							var pair1 = pair;
+							var names = pair.GetType().GetFields().Select(p => p.Name.ToString()).ToArray();
+							var fieldTypes = pair.GetType().GetFields().Select(p => p.FieldType.ToString()).ToArray();
+							Debug.Log(string.Join(",", names));
+							Debug.Log(string.Join(",", fieldTypes));
+						}
 					}
-				}
 
-				string sqlCreate = "CREATE TABLE TestSheet ([ID] INTEGER,[Username] VarChar,[UserPwd] VarChar)";
-				var cmd = new System.Data.OleDb.OleDbCommand(sqlCreate, connection);
-				connection.Open();
-				cmd.ExecuteNonQuery();
-				foreach (var pair in content)
-				{
-					if (pair.GetType().IsClass)
+					string sqlCreate = "CREATE TABLE TestSheet ([ID] INTEGER,[Username] VarChar,[UserPwd] VarChar)";
+					var cmd = new System.Data.OleDb.OleDbCommand(sqlCreate, connection);
+					connection.Open();
+					cmd.ExecuteNonQuery();
+					foreach (var pair in content)
 					{
-						var pair1 = pair;
-						var haha = pair.GetType().GetFields().Select(p => p.GetValue(pair1).ToString()).ToArray();
-						Debug.Log(string.Join(",", haha));
-						cmd.CommandText = string.Format("INSERT INTO TestSheet VALUES({0})", string.Join(",", haha));
-						cmd.ExecuteNonQuery();
+						if (pair.GetType().IsClass)
+						{
+							var pair1 = pair;
+							var haha = pair.GetType().GetFields().Select(p => p.GetValue(pair1).ToString()).ToArray();
+							Debug.Log(string.Join(",", haha));
+							cmd.CommandText = string.Format("INSERT INTO TestSheet VALUES({0})", string.Join(",", haha));
+							cmd.ExecuteNonQuery();
+						}
 					}
 				}
 			}
