@@ -25,7 +25,7 @@ namespace Excel
 		//人为规定第二行为变量名称
 		//人为规定第三行为变量类型
 		//共有多少列由第二行第三行列数来决定
-		public override IEnumerable<DataTable> GetDataTable()
+		public override IEnumerable<DataRowCollection> GetDataRowCollection()
 		{
 			if (File.Exists(path))
 			{
@@ -34,6 +34,7 @@ namespace Excel
 					foreach (var worksheet in excelPackage.Workbook.Worksheets)
 					{
 						var dataTable = new DataTable();
+
 						dataTable.TableName = worksheet.Name;
 
 						for (int i = 0; i < worksheet.Dimension.Columns; i++)
@@ -46,7 +47,11 @@ namespace Excel
 							dataTable.Rows.Add(worksheet.Cells.Skip(j * worksheet.Dimension.Columns).Take(worksheet.Dimension.Columns).Select(p => p.GetValue<object>()).ToArray());
 						}
 
-						yield return dataTable;
+						DataRowCollection rowCollection = dataTable.Rows;
+
+						Debug.Log(string.Format("行:{0}\n列:{1}", dataTable.Rows.Count, dataTable.Columns.Count));
+
+						yield return rowCollection;
 					}
 				}
 			}
