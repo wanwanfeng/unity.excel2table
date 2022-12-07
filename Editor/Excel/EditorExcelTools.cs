@@ -175,7 +175,7 @@ namespace Excel
             //using (var dd = new MS_GetConnection(path))
             using (var dd = new TT_GetTable(path))
             {
-                DataRowCollection rowCollection = dd.GetDataRowCollection(sheet);
+                DataRowCollection rowCollection = dd.GetDataRowCollection().ToArray()[sheet];
                 int curHang = 0;
 
 				//描述行信息
@@ -235,7 +235,7 @@ namespace Excel
 			//using (var dd = new MS_GetConnection(path))
 			using (var dd = new TT_GetTable(path))
 			{
-				DataRowCollection rowCollection = dd.GetDataRowCollection(sheet);
+				DataRowCollection rowCollection = dd.GetDataRowCollection().ToArray()[sheet];
 				IEnumerator<DataRow> enumerator = rowCollection.GetEnumerator() as IEnumerator<DataRow>;
 
 				while (enumerator.MoveNext())
@@ -298,20 +298,21 @@ namespace Excel
 
 	public class GetTable
 	{
-		public virtual DataTable GetDataTable(int sheet)
+		public virtual IEnumerable<DataTable> GetDataTable()
 		{
-			return null;
+			yield break;
 		}
 
-		public virtual DataRowCollection GetDataRowCollection(int sheet)
+		public virtual IEnumerable<DataRowCollection> GetDataRowCollection()
 		{
-			DataTable table = GetDataTable(sheet); //返回第一张表
+            foreach (var table in GetDataTable())
+            {
+				DataRowCollection rowCollection = table.Rows;
 
-			DataRowCollection rowCollection = table.Rows; //返回一个行的集合
-
-			Debug.Log(string.Format("行:{0}\n列:{1}", table.Rows.Count, table.Columns.Count));
-
-			return rowCollection;
+				Debug.Log(string.Format("行:{0}\n列:{1}", table.Rows.Count, table.Columns.Count));
+			
+				yield return rowCollection;
+			}
 		}
 	}
 }

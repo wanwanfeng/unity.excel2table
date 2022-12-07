@@ -1,5 +1,6 @@
 ﻿using ExcelDataReader;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using UnityEngine;
@@ -51,15 +52,18 @@ namespace Excel
 		//人为规定第二行为变量名称
 		//人为规定第三行为变量类型
 		//共有多少列由第二行第三行列数来决定
-		public override DataTable GetDataTable(int sheet)
+		public override IEnumerable<DataTable> GetDataTable()
 		{
 			if (dataSet == null)
 			{
 				Debug.Log(null);
-				return null;
+				yield break;
 			}
 
-			return dataSet.Tables[sheet];
+			for (int i = 0; i < dataSet.Tables.Count; i++)
+			{
+				yield return dataSet.Tables[i];
+			}
 		}
 
 		void IDisposable.Dispose()

@@ -53,21 +53,24 @@ namespace Excel
 		//人为规定第二行为变量名称
 		//人为规定第三行为变量类型
 		//共有多少列由第二行第三行列数来决定
-		public override DataTable GetDataTable(int sheet)
+		public override IEnumerable<DataTable> GetDataTable()
 		{
 			connection.Open();
 			var sql = "SELECT * FROM  [Sheet1$]";
 			var adapter = new System.Data.OleDb.OleDbDataAdapter(sql, connection);
 			DataSet dataSet = new DataSet();
 			adapter.Fill(dataSet);
-			return dataSet.Tables[sheet]; //返回第一张表
+
+			for (int i = 0; i < dataSet.Tables.Count; i++)
+			{
+				yield return dataSet.Tables[i];
+			}
 		}
 
 		void IDisposable.Dispose()
 		{
 			connection.Close();
 		}
-
 
 
 		#region 生成excel
