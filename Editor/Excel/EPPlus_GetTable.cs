@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.IO;
+using System.Linq;
 using UnityEngine;
 
 namespace Excel
@@ -40,16 +41,9 @@ namespace Excel
 							dataTable.Columns.Add();
 						}
 
-						IEnumerator<ExcelRangeBase> enumerator = worksheet.Cells.GetEnumerator();
-
 						for (int j = 0; j < worksheet.Dimension.Rows; j++)
 						{
-							List<object> result = new List<object>();
-							for (int i = 0; i < worksheet.Dimension.Columns; i++)
-							{
-								if (enumerator.MoveNext()) result.Add(enumerator.Current.GetValue<object>());
-							}
-							dataTable.Rows.Add(result.ToArray());
+							dataTable.Rows.Add(worksheet.Cells.Skip(j * worksheet.Dimension.Columns).Take(worksheet.Dimension.Columns).Select(p => p.GetValue<object>()).ToArray());
 						}
 
 						yield return dataTable;
