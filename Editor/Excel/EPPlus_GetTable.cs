@@ -40,12 +40,14 @@ namespace Excel
 							dataTable.Columns.Add();
 						}
 
+						IEnumerator<ExcelRangeBase> enumerator = worksheet.Cells.GetEnumerator();
+
 						for (int j = 0; j < worksheet.Dimension.Rows; j++)
 						{
 							List<object> result = new List<object>();
 							for (int i = 0; i < worksheet.Dimension.Columns; i++)
 							{
-								result.Add(worksheet.Cells[j + 1, i + 1].GetValue<object>());
+								if (enumerator.MoveNext()) result.Add(enumerator.Current.GetValue<object>());
 							}
 							dataTable.Rows.Add(result.ToArray());
 						}
