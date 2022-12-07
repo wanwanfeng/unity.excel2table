@@ -52,7 +52,7 @@ namespace Excel
 		//人为规定第二行为变量名称
 		//人为规定第三行为变量类型
 		//共有多少列由第二行第三行列数来决定
-		public override IEnumerable<DataTable> GetDataTable()
+		public override IEnumerable<DataRowCollection> GetDataRowCollection()
 		{
 			if (dataSet == null)
 			{
@@ -62,11 +62,17 @@ namespace Excel
 
 			for (int i = 0; i < dataSet.Tables.Count; i++)
 			{
-				yield return dataSet.Tables[i];
+				var table = dataSet.Tables[i];
+
+				DataRowCollection rowCollection = table.Rows;
+
+				Debug.Log(string.Format("行:{0}\n列:{1}", table.Rows.Count, table.Columns.Count));
+
+				yield return rowCollection;
 			}
 		}
 
-		void IDisposable.Dispose()
+        void IDisposable.Dispose()
 		{
 			
 		}

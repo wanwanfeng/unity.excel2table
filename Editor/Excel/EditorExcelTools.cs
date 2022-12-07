@@ -298,21 +298,9 @@ namespace Excel
 
 	public class GetTable
 	{
-		public virtual IEnumerable<DataTable> GetDataTable()
-		{
-			yield break;
-		}
-
 		public virtual IEnumerable<DataRowCollection> GetDataRowCollection()
 		{
-            foreach (var table in GetDataTable())
-            {
-				DataRowCollection rowCollection = table.Rows;
-
-				Debug.Log(string.Format("行:{0}\n列:{1}", table.Rows.Count, table.Columns.Count));
-			
-				yield return rowCollection;
-			}
+			yield break;
 		}
 	}
 }
