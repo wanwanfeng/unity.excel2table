@@ -233,7 +233,8 @@ namespace Excel
 		private static IEnumerable YeildReturnLine(string path, int sheet)
 		{
 			//using (var dd = new MS_GetConnection(path))
-			using (var dd = new TT_GetTable(path))
+			//using (var dd = new TT_GetTable(path)) 
+			using (var dd = new EPPlus_GetTable(path)) 
 			{
 				DataRowCollection rowCollection = dd.GetDataRowCollection().ToArray()[sheet];
 				IEnumerator<DataRow> enumerator = rowCollection.GetEnumerator() as IEnumerator<DataRow>;
