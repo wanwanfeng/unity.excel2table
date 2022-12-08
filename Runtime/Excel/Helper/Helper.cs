@@ -1,11 +1,8 @@
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Xml;
 
 namespace Excel
 {
-    public abstract partial class Helper
+    public abstract partial class Helper : FileHelper
     {
         public static Type Setting = typeof(Json);
 
