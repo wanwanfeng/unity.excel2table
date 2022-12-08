@@ -52,12 +52,6 @@ namespace Excel
 			Debug.Log(path);
 		}
 
-		//遍历行的集合，取得每一行的DataRow对象
-		//默认表中第一行为表头，输出或不输出看参数
-		//人为规定第二行为变量名称
-		//人为规定第三行为变量类型
-		//共有多少列由第二行第三行列数来决定
-
         public override IEnumerable<DataRowCollection> GetDataRowCollection()
         {
 			using (var connection = GetConnection())
