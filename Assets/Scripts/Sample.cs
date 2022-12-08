@@ -10,7 +10,7 @@ using UnityEngine;
 public partial class Sample : MonoBehaviour
 {
 	//设定配表方式
-	public static Excel.ImpHelper helper => new Excel.Helper.Json();
+	public static ImpHelper helper => Activator.CreateInstance(Helper.Setting) as ImpHelper;
 
 	private Dictionary<Type, IDataCollection> dictionary;
 
