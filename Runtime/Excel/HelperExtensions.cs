@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using LitJson;
+using UnityEngine;
 
 namespace Excel
 {
@@ -170,54 +171,61 @@ namespace Excel
 
         public static void Write(this JsonWriter writer, string value, string type)
         {
-            type = type.ToLower();
-            switch (type)
+            try
             {
-                case "bool": writer.Write(bool.Parse(value)); break;
-                case "int": writer.Write(int.Parse(value)); break;
-                case "float": writer.Write(float.Parse(value)); break;
-                case "double": writer.Write(double.Parse(value)); break;
-                case "long": writer.Write(long.Parse(value)); break;
-                case "decimal": writer.Write(decimal.Parse(value)); break;
-                case "byte": writer.Write(byte.Parse(value)); break;
-                case "short": writer.Write(short.Parse(value)); break;
-                case "string": 
-                case "char": writer.Write(value); break;
-                case "bool[]":
-                case "int[]":
-                case "float[]":
-                case "double[]":
-                case "long[]":
-                case "decimal[]":
-                case "byte[]":
-                case "short[]":
-                case "string[]":
-                case "list<bool>":
-                case "list<int>":
-                case "list<float>":
-                case "list<double>":
-                case "list<long>":
-                case "list<decimal>":
-                case "list<byte>":
-                case "list<short>":
-                case "list<string>":
-                    {
-                        type = type.Replace("[]", "").Replace("list<", "").Replace(">", "");
-                        writer.WriteArrayStart();
-                        string[] array = value.Split('|');
-                        for (var i = 0; i < array.Length; i++)
+                type = type.ToLower();
+                switch (type)
+                {
+                    case "bool": { writer.Write(bool.TryParse(value, out bool v) ? v : false); break; }
+                    case "int": { writer.Write(int.TryParse(value, out int v) ? v : 0); break; }
+                    case "float": { writer.Write(float.TryParse(value, out float v) ? v : 0); break; }
+                    case "double": { writer.Write(double.TryParse(value, out double v) ? v : 0); break; }
+                    case "long": { writer.Write(long.TryParse(value, out long v) ? v : 0); break; }
+                    case "decimal": { writer.Write(decimal.TryParse(value, out decimal v) ? v : 0); break; }
+                    case "byte": { writer.Write(byte.TryParse(value, out byte v) ? v : 0); break; }
+                    case "short": { writer.Write(short.TryParse(value, out short v) ? v : 0); break; }
+                    case "string":
+                    case "char": writer.Write(value); break;
+                    case "bool[]":
+                    case "int[]":
+                    case "float[]":
+                    case "double[]":
+                    case "long[]":
+                    case "decimal[]":
+                    case "byte[]":
+                    case "short[]":
+                    case "string[]":
+                    case "list<bool>":
+                    case "list<int>":
+                    case "list<float>":
+                    case "list<double>":
+                    case "list<long>":
+                    case "list<decimal>":
+                    case "list<byte>":
+                    case "list<short>":
+                    case "list<string>":
                         {
-                            writer.Write(array[i], type);
+                            type = type.Replace("[]", "").Replace("list<", "").Replace(">", "");
+                            writer.WriteArrayStart();
+                            string[] array = value.Split('|');
+                            for (var i = 0; i < array.Length; i++)
+                            {
+                                writer.Write(array[i], type);
+                            }
+                            writer.WriteArrayEnd();
                         }
-                        writer.WriteArrayEnd();
-                    }
-                    break;
-                default:
-                    writer.Write(value);
-                    break;
+                        break;
+                    default:
+                        writer.Write(value);
+                        break;
+                }
+            }
+            catch (Exception e)
+            {
+                Debug.LogError($"{ value},{type}");
+                Debug.LogException(e);
             }
         }
-
         #endregion
     }
 }
