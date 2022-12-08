@@ -166,9 +166,9 @@ namespace Excel
 
 		private static IEnumerable YeildReturnLine(string path, int sheet)
 		{
-			//using (var dd = new MS_GetConnection(path))
-			//using (var dd = new TT_GetTable(path)) 
-			using (var dd = new EPPlus_GetTable(path))
+			//using (var dd = new MS_GetConnection())
+			//using (var dd = new TT_GetTable()) 
+			using (var dd = new EPPlus_GetTable())
 			{
 				//此方法默认从第一行输出
 				//第一行为描述
@@ -177,7 +177,7 @@ namespace Excel
 				//人为规定第二行为变量名称
 				//人为规定第三行为变量类型
 				//共有多少列由第二行第三行列数来决定
-				foreach (var rowCollection in dd.GetDataRowCollection().Skip(sheet).Take(1))
+				foreach (var rowCollection in dd.GetDataRowCollection(path).Skip(sheet).Take(1))
 				{
 					IEnumerator<DataRow> enumerator = rowCollection.GetEnumerator() as IEnumerator<DataRow>;
 
@@ -242,7 +242,7 @@ namespace Excel
 
 	public class GetTable
 	{
-		public virtual IEnumerable<DataRowCollection> GetDataRowCollection()
+		public virtual IEnumerable<DataRowCollection> GetDataRowCollection(string path)
 		{
 			yield break;
 		}

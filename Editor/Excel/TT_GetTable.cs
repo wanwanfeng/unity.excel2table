@@ -14,9 +14,9 @@ namespace Excel
 	/// </summary>
 	public class TT_GetTable : GetTable, IDisposable
 	{
-		DataSet dataSet;
-		public TT_GetTable(string path)
+		public override IEnumerable<DataRowCollection> GetDataRowCollection(string path)
 		{
+			DataSet dataSet;
 			try
 			{
 				IExcelDataReader excelReader = null;
@@ -33,24 +33,14 @@ namespace Excel
 							excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
 							break;
 						default:
-							Debug.Log("文件类型错误！！！");
-							return;
+							throw new Exception("文件类型错误！！！");
 					}
 					dataSet = excelReader.AsDataSet();
 				}
 			}
 			catch (Exception err)
 			{
-				Debug.LogError(Path.GetFileName(path) + ":数据绑定Excel失败!失败原因：" + err.Message);
-			}
-		}
-
-		public override IEnumerable<DataRowCollection> GetDataRowCollection()
-		{
-			if (dataSet == null)
-			{
-				Debug.Log(null);
-				yield break;
+				throw new Exception(Path.GetFileName(path) + ":数据绑定Excel失败!失败原因：" + err.Message);
 			}
 
 			for (int i = 0; i < dataSet.Tables.Count; i++)

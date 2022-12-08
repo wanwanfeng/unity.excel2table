@@ -13,8 +13,7 @@ namespace Excel
 	/// </summary>
 	public class MS_GetTable : GetTable, IDisposable
 	{
-		string path;
-		internal System.Data.OleDb.OleDbConnection GetConnection()
+		internal System.Data.OleDb.OleDbConnection GetConnection(string path)
 		{
 			if (File.Exists(path))
 			{
@@ -46,15 +45,9 @@ namespace Excel
             }
 		}
 
-		public MS_GetTable(string path)
-		{
-			this.path = path;
-			Debug.Log(path);
-		}
-
-        public override IEnumerable<DataRowCollection> GetDataRowCollection()
+        public override IEnumerable<DataRowCollection> GetDataRowCollection(string path)
         {
-			using (var connection = GetConnection())
+			using (var connection = GetConnection(path))
 			{
 				connection.Open();
 				var sql = "SELECT * FROM  [Sheet1$]";
@@ -84,9 +77,9 @@ namespace Excel
 
 		public static void MS_ExportExcel(string path, Dictionary<int, List<Cell>> content)
 		{
-			using (var cc = new MS_GetTable(path))
+			using (var cc = new MS_GetTable())
 			{
-				using (var connection = cc.GetConnection())
+				using (var connection = cc.GetConnection(path))
 				{
 					string sqlCreate = "CREATE TABLE TestSheet ([ID] INTEGER,[Username] VarChar,[UserPwd] VarChar)";
 					var cmd = new System.Data.OleDb.OleDbCommand(sqlCreate, connection);
@@ -109,9 +102,9 @@ namespace Excel
 		/// <param name="content"></param>
 		public static void MS_ExportExcel(string path, Dictionary<object, List<object>> content)
 		{
-			using (var cc = new MS_GetTable(path))
+			using (var cc = new MS_GetTable())
 			{
-				using (var connection = cc.GetConnection())
+				using (var connection = cc.GetConnection(path))
 				{
 					string sqlCreate = "CREATE TABLE TestSheet ([ID] INTEGER,[Username] VarChar,[UserPwd] VarChar)";
 					var cmd = new System.Data.OleDb.OleDbCommand(sqlCreate, connection);
@@ -137,9 +130,9 @@ namespace Excel
 			if (content == null || content.Count == 0)
 				return;
 
-			using (var cc = new MS_GetTable(path))
+			using (var cc = new MS_GetTable())
 			{
-				using (var connection = cc.GetConnection())
+				using (var connection = cc.GetConnection(path))
 				{
 					{
 						var pair = content.First();

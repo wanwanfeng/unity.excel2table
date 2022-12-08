@@ -11,14 +11,7 @@ namespace Excel
 	/// </summary>
 	public class EPPlus_GetTable : GetTable, IDisposable
 	{
-		string path = null;
-
-		public EPPlus_GetTable(string path)
-		{
-			this.path = path;
-		}
-
-		public override IEnumerable<DataRowCollection> GetDataRowCollection()
+		public override IEnumerable<DataRowCollection> GetDataRowCollection(string path)
 		{
 			if (File.Exists(path))
 			{
