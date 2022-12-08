@@ -13,7 +13,7 @@ namespace Excel
 	public partial class EditorExcelTools
 	{
 		//设定配表方式
-		static Excel.ImpHelper helper => Sample.helper;
+		static ImpHelper helper => Activator.CreateInstance(Helper.Setting) as ImpHelper;
 
 		public static string ExcelPath = "Excel/"; //Excel根目录
 		public static string TablePath = "Temp/Excel/"; //Table根目录
