@@ -21,6 +21,7 @@ public partial class SampleSqlit3 : Sample
 			.Where(p => !p.IsAbstract)
 			.ToDictionary(p => p, p => (IDataCollection)Activator.CreateInstance(p));
 
+		helper.count = 0;
 		foreach (var pair in dictionary)
 		{
 			yield return pair.Value.Load(helper, pair.Key.Name);
