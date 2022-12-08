@@ -23,14 +23,19 @@ namespace Excel
 
 						dataTable.TableName = worksheet.Name;
 
-						for (int i = 0; i < worksheet.Dimension.Columns; i++)
+						for (int i = worksheet.Dimension.Start.Column; i <= worksheet.Dimension.End.Column; i++)
 						{
 							dataTable.Columns.Add();
 						}
 
-						for (int j = 0; j < worksheet.Dimension.Rows; j++)
+						for (int j = 1; j <= worksheet.Dimension.End.Row; j++)
 						{
-							dataTable.Rows.Add(worksheet.Cells.Skip(j * worksheet.Dimension.Columns).Take(worksheet.Dimension.Columns).Select(p => p.GetValue<object>()).ToArray());
+							List<object> result = new List<object>();
+							for (int i = 1; i <= worksheet.Dimension.End.Column; i++)
+							{
+								result.Add(worksheet.Cells[j, i].GetValue<object>());
+							}
+							dataTable.Rows.Add(result.ToArray());
 						}
 
 						DataRowCollection rowCollection = dataTable.Rows;
