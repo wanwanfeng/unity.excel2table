@@ -26,7 +26,7 @@ public partial class Sample : MonoBehaviour
 
 		using (var loader = new LoadBin())
 		{
-			if (FileHelper.GZIP.Deserialize(loader.path, out Dictionary<string, byte[]> dict))
+			if (Helper.GZIP.Deserialize(loader.path, out Dictionary<string, byte[]> dict))
 			{
 				dict = dict.ToDictionary(p => Path.GetFileNameWithoutExtension(p.Key), p => p.Value);
 
