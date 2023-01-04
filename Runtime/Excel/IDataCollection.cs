@@ -28,6 +28,8 @@ namespace Excel
 	/// </summary>
 	public partial interface IDataCollection
 	{
+		uint priority { get; }
+
 		IEnumerator Load(ImpHelper helper, object obj);
 	}
 
@@ -68,6 +70,13 @@ namespace Excel
         {
             base.RemoveItem(index);
         }
+
+		uint IDataCollection.priority { get { return GetPriority(); } }
+
+		protected virtual uint GetPriority()
+		{
+			return 999;
+		}
 
 		IEnumerator IDataCollection.Load(ImpHelper helper, object obj)
 		{

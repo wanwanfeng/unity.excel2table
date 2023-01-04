@@ -4,8 +4,6 @@ namespace Excel
 {
     public abstract partial class Helper : FileHelper
     {
-        public static Type Setting = typeof(Json);
-
         /// <summary>
         /// ·Ö¸î×Ö·û´®(·µ»ØÇ°×º)
         /// </summary>

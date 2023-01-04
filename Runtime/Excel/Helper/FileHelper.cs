@@ -12,6 +12,12 @@ namespace Excel
 {
 	public class FileHelper
 	{
+		static FileHelper()
+		{
+			LitJson.JsonMapper.RegisterImporter<double, float>(input => (float)input);
+			LitJson.JsonMapper.RegisterExporter<float>((v, w) => { w.Write(v); });
+		}
+
 		static System.Security.Cryptography.MD5 MD5 = System.Security.Cryptography.MD5.Create();
 		static System.Security.Cryptography.SHA1 SHA1 = System.Security.Cryptography.SHA1.Create();
 

@@ -13,10 +13,9 @@ namespace Excel
 	public partial class EditorExcelTools
 	{
 		//设定配表方式
-		static ImpHelper helper => Activator.CreateInstance(Helper.Setting) as ImpHelper;
-
-		public static string ExcelPath = "Excel/"; //Excel根目录
-		public static string TablePath = "Temp/Excel/"; //Table根目录
+		static ImpHelper helper => Activator.CreateInstance(ExcelSetting.Instance.Setting) as ImpHelper;
+		public static string ExcelPath => ExcelSetting.Instance.ExcelPath; //Excel根目录
+		public static string TablePath => ExcelSetting.Instance.TablePath; //Table根目录
 
 		[Serializable]
 		public class ExcelInfo
