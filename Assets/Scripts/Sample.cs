@@ -4,25 +4,23 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using UnityEngine;
 
 public partial class Sample : MonoBehaviour
 {
-	//设定配表方式
-	public static ImpHelper helper => Activator.CreateInstance(Helper.Setting) as ImpHelper;
 
 	private Dictionary<Type, IDataCollection> dictionary;
 
-    public IDataCollection this[Type key] => dictionary.TryGetValue(key, out IDataCollection data) ? data : null;
+	public IDataCollection this[Type key] => dictionary.TryGetValue(key, out IDataCollection data) ? data : null;
 
-    public IEnumerator Start()
+	public IEnumerator Start()
 	{
-		dictionary = typeof(IDataCollection).Assembly.GetTypes()
-			.Where(p => typeof(IDataCollection).IsAssignableFrom(p))
-			.Where(p => typeof(IData).IsAssignableFrom(p))
-			.Where(p => !p.IsAbstract)
-			.ToDictionary(p => p, p => (IDataCollection)Activator.CreateInstance(p));
+		var helper = Activator.CreateInstance(ExcelSetting.Instance.Setting) as ImpHelper;
+		var dictionary = this.dictionary = typeof(IDataCollection).Assembly.GetTypes()
+				.Where(p => typeof(IDataCollection).IsAssignableFrom(p))
+				.Where(p => typeof(IData).IsAssignableFrom(p))
+				.Where(p => !p.IsAbstract)
+				.ToDictionary(p => p, p => (IDataCollection)Activator.CreateInstance(p));
 
 		using (var loader = new LoadBin())
 		{
