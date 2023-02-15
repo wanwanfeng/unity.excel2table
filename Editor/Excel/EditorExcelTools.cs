@@ -10,6 +10,11 @@ using UnityEngine;
 
 namespace Excel
 {
+	public interface ICreateClass
+	{
+		void CreateClass(EditorExcelTools.ExcelInfo[] content, Func<string, int, IEnumerable> YeildReturnLine, string saveFolderRoot);
+	}
+
 	public partial class EditorExcelTools
 	{
 		//设定配表方式
@@ -49,100 +54,17 @@ namespace Excel
 
 			Debug.Log(LitJson.JsonMapper.ToJson(files));
 
-			CreateClass(files);
+			foreach (var type in AppDomain.CurrentDomain.GetAssemblies().SelectMany(p => p.GetTypes()).Where(p => typeof(ICreateClass).IsAssignableFrom(p) && p.IsClass && !p.IsSubclassOf(typeof(MonoBehaviour))))
+			{
+				if (Activator.CreateInstance(type) is ICreateClass ins)
+				{
+					Debug.Log($"创建类文件：{type.FullName}");
+					ins.CreateClass(files, YeildReturnLine, TablePath);
+				}
+			}
+
 			ExportTable(files, helper);
 			AssetDatabase.Refresh();
-		}
-
-		/// <summary>
-		/// 创建类文件
-		/// </summary>
-		/// <param name="excelFullPath"></param>
-		public static void CreateClass(ExcelInfo[] content)
-		{
-			StringBuilder sb = new StringBuilder();
-			StringBuilder sb2 = new StringBuilder();
-
-			sb.AppendLine("using System;");
-			sb.AppendLine("using System.Collections.Generic;");
-			sb.AppendLine("using System.ComponentModel;");
-			sb.AppendLine("using Excel;");
-			sb.AppendLine("using UnityEngine;");
-			sb.AppendLine("");
-
-			sb2.AppendLine("public interface IData {}");
-
-			foreach (ExcelInfo excelInfo in content.OrderBy(p => p.excelName))
-			{
-				var result = YeildReturnLine(excelInfo.excelFullPath, excelInfo.sheet).OfType<List<Cell>>().ToList();
-				if (result.Count == 0) continue;
-
-				string keyType = result[0].FirstOrDefault(p => p.name == "id").type;
-
-				//创建DataInfo
-				sb.AppendLine("");
-				sb.AppendLine("[Serializable]");
-				sb.AppendLine($"public partial class {excelInfo.classInfoName} : DataInfo<{keyType}>");
-				sb.AppendLine("{");
-				{
-					foreach (var cell in result[0])
-					{
-						sb.Append("\t"); sb.AppendLine($"[Description(\"{cell.remark.Replace("\n", "")}\")]");
-						sb.Append("\t"); sb.AppendLine($"public {cell.type} {cell.name};");
-					}
-
-					//创建DataInfo.GetPrimaryKey
-					sb.Append("\t"); sb.AppendLine($"public override {keyType} GetPrimaryKey()");
-					sb.Append("\t"); sb.AppendLine("{");
-					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return id;");
-					sb.Append("\t"); sb.AppendLine("}");
-
-					sb.Append("\t"); sb.AppendLine("partial void OnConstruction();");
-
-					//创建DataInfo.Copy
-					sb.Append("\t"); sb.AppendLine($"public {excelInfo.classInfoName} Copy({excelInfo.classInfoName} other)");
-					sb.Append("\t"); sb.AppendLine("{");
-					foreach (var cell in result[0])
-					{
-						sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"this.{cell.name} = other.{cell.name};");
-					}
-					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("OnConstruction();");
-					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return other;");
-					sb.Append("\t"); sb.AppendLine("}");
-
-
-					//创建DataInfo.Dict
-					sb.Append("\t"); sb.AppendLine($"public static explicit operator {excelInfo.classInfoName}(Dictionary<string, object> other)");
-					sb.Append("\t"); sb.AppendLine("{");
-					sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"var val_ = new {excelInfo.classInfoName}();");
-					foreach (var cell in result[0])
-					{
-						sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"val_.{cell.name} = other.ContainsKey(\"{cell.name}\") ? ({cell.type})other[\"{cell.name}\"] : default;");
-					}
-					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("val_.OnConstruction();");
-					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return val_;");
-					sb.Append("\t"); sb.AppendLine("}");
-				}
-				sb.AppendLine("}");
-
-				//创建DataTable
-				sb2.AppendLine("[Serializable]");
-				sb2.AppendLine($"public partial class {excelInfo.classTableName} : DataTable<{keyType}, {excelInfo.classInfoName}>, IData");
-				sb2.AppendLine("{");
-				sb2.AppendLine("}");
-			}
-
-			sb.AppendLine(sb2.ToString());
-
-			//创建TableManager
-			sb.AppendLine($"public partial class TableManager");
-			sb.AppendLine("{");
-			foreach (ExcelInfo excelInfo in content.OrderBy(p => p.excelName))
-			{
-				sb.Append("\t"); sb.AppendLine($"public  {excelInfo.classTableName} {excelInfo.classTableName} {{ get; private set; }}");
-			}
-			sb.AppendLine("}");
-			File.WriteAllText(Path.Combine(TablePath, "data.cs"), sb.ToString());
 		}
 
 		public static void ExportTable(ExcelInfo[] content, ImpHelper helper)
@@ -236,6 +158,100 @@ namespace Excel
 					}
 				}
 			}
+		}
+	}
+
+	public class CreateCs : ICreateClass
+	{
+		/// <summary>
+		/// 创建类文件
+		/// </summary>
+		/// <param name="excelFullPath"></param>
+		public void CreateClass(EditorExcelTools.ExcelInfo[] content, Func<string, int, IEnumerable> YeildReturnLine, string saveFolderRoot)
+		{
+			StringBuilder sb = new StringBuilder();
+			StringBuilder sb2 = new StringBuilder();
+
+			sb.AppendLine("using System;");
+			sb.AppendLine("using System.Collections.Generic;");
+			sb.AppendLine("using System.ComponentModel;");
+			sb.AppendLine("using Excel;");
+			sb.AppendLine("using UnityEngine;");
+			sb.AppendLine("");
+
+			sb2.AppendLine("public interface IData {}");
+
+			foreach (EditorExcelTools.ExcelInfo excelInfo in content.OrderBy(p => p.excelName))
+			{
+				var result = YeildReturnLine(excelInfo.excelFullPath, excelInfo.sheet).OfType<List<Cell>>().ToList();
+				if (result.Count == 0) continue;
+
+				string keyType = result[0].FirstOrDefault(p => p.name == "id").type;
+
+				//创建DataInfo
+				sb.AppendLine("");
+				sb.AppendLine("[Serializable]");
+				sb.AppendLine($"public partial class {excelInfo.classInfoName} : DataInfo<{keyType}>");
+				sb.AppendLine("{");
+				{
+					foreach (var cell in result[0])
+					{
+						sb.Append("\t"); sb.AppendLine($"[Description(\"{cell.remark.Replace("\n", "")}\")]");
+						sb.Append("\t"); sb.AppendLine($"public {cell.type} {cell.name};");
+					}
+
+					//创建DataInfo.GetPrimaryKey
+					sb.Append("\t"); sb.AppendLine($"public override {keyType} GetPrimaryKey()");
+					sb.Append("\t"); sb.AppendLine("{");
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return id;");
+					sb.Append("\t"); sb.AppendLine("}");
+
+					sb.Append("\t"); sb.AppendLine("partial void OnConstruction();");
+
+					//创建DataInfo.Copy
+					sb.Append("\t"); sb.AppendLine($"public {excelInfo.classInfoName} Copy({excelInfo.classInfoName} other)");
+					sb.Append("\t"); sb.AppendLine("{");
+					foreach (var cell in result[0])
+					{
+						sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"this.{cell.name} = other.{cell.name};");
+					}
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("OnConstruction();");
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return other;");
+					sb.Append("\t"); sb.AppendLine("}");
+
+
+					//创建DataInfo.Dict
+					sb.Append("\t"); sb.AppendLine($"public static explicit operator {excelInfo.classInfoName}(Dictionary<string, object> other)");
+					sb.Append("\t"); sb.AppendLine("{");
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"var val_ = new {excelInfo.classInfoName}();");
+					foreach (var cell in result[0])
+					{
+						sb.Append("\t"); sb.Append("\t"); sb.AppendLine($"val_.{cell.name} = other.ContainsKey(\"{cell.name}\") ? ({cell.type})other[\"{cell.name}\"] : default;");
+					}
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("val_.OnConstruction();");
+					sb.Append("\t"); sb.Append("\t"); sb.AppendLine("return val_;");
+					sb.Append("\t"); sb.AppendLine("}");
+				}
+				sb.AppendLine("}");
+
+				//创建DataTable
+				sb2.AppendLine("[Serializable]");
+				sb2.AppendLine($"public partial class {excelInfo.classTableName} : DataTable<{keyType}, {excelInfo.classInfoName}>, IData");
+				sb2.AppendLine("{");
+				sb2.AppendLine("}");
+			}
+
+			sb.AppendLine(sb2.ToString());
+
+			//创建TableManager
+			sb.AppendLine($"public partial class TableManager");
+			sb.AppendLine("{");
+			foreach (EditorExcelTools.ExcelInfo excelInfo in content.OrderBy(p => p.excelName))
+			{
+				sb.Append("\t"); sb.AppendLine($"public  {excelInfo.classTableName} {excelInfo.classTableName} {{ get; private set; }}");
+			}
+			sb.AppendLine("}");
+			File.WriteAllText(Path.Combine(saveFolderRoot, "data.cs"), sb.ToString());
 		}
 	}
 
