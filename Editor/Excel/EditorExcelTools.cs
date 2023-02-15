@@ -15,8 +15,25 @@ namespace Excel
 		void CreateClass(EditorExcelTools.ExcelInfo[] content, Func<string, int, IEnumerable> YeildReturnLine, string saveFolderRoot);
 	}
 
+	public interface IPostCreate
+	{
+		void Post(string[] paths);
+	}
+
 	public partial class EditorExcelTools
 	{
+		public static IEnumerable<T> Yield<T>()
+        {
+			foreach (var type in AppDomain.CurrentDomain.GetAssemblies().SelectMany(p => p.GetTypes()).Where(p => typeof(T).IsAssignableFrom(p) && p.IsClass && !p.IsSubclassOf(typeof(MonoBehaviour))))
+			{
+				if (Activator.CreateInstance(type) is T ins)
+				{
+					yield return ins;
+				}
+			}
+		}
+
+
 		//设定配表方式
 		static ImpHelper helper => Activator.CreateInstance(ExcelSetting.Instance.Setting) as ImpHelper;
 		public static string ExcelPath => ExcelSetting.Instance.ExcelPath; //Excel根目录
@@ -54,20 +71,29 @@ namespace Excel
 
 			Debug.Log(LitJson.JsonMapper.ToJson(files));
 
-			foreach (var type in AppDomain.CurrentDomain.GetAssemblies().SelectMany(p => p.GetTypes()).Where(p => typeof(ICreateClass).IsAssignableFrom(p) && p.IsClass && !p.IsSubclassOf(typeof(MonoBehaviour))))
+			foreach (var ins in Yield<ICreateClass>())
 			{
-				if (Activator.CreateInstance(type) is ICreateClass ins)
-				{
-					Debug.Log($"创建类文件：{type.FullName}");
-					ins.CreateClass(files, YeildReturnLine, TablePath);
-				}
+				Debug.Log($"创建类文件：{ins.GetType().FullName}");
+				ins.CreateClass(files, YeildReturnLine, TablePath);
 			}
 
-			ExportTable(files, helper);
+			var post = Yield<IPostCreate>().FirstOrDefault();
+
+			if (post == null)
+			{
+				var tables = ExportTable(files, helper).ToArray();
+				Helper.GZIP.Serialize(tables, Path.Combine(Application.persistentDataPath, "data.bin"));
+				EditorUtility.RevealInFinder(Application.persistentDataPath);
+			}
+			else
+			{
+				post.Post(ExportTable(files, helper).ToArray());
+			}
+
 			AssetDatabase.Refresh();
 		}
 
-		public static void ExportTable(ExcelInfo[] content, ImpHelper helper)
+		public static IEnumerable<string> ExportTable(ExcelInfo[] content, ImpHelper helper)
 		{
 			var root = Path.Combine(TablePath, "data");
 			Directory.CreateDirectory(root);
@@ -78,11 +104,8 @@ namespace Excel
 				string savePath = Path.ChangeExtension(Path.Combine(root, excelInfo.classTableName), helper.Extensions);
 				Debug.Log(path + "\n" + savePath);
 				helper.Export(savePath, YeildReturnLine(path, excelInfo.sheet), Path.GetFileNameWithoutExtension(savePath));
+				yield return savePath;
 			}
-
-			var tables = Directory.GetFiles(root, "*.*").ToArray();
-			Helper.GZIP.Serialize(tables, Path.Combine(Application.persistentDataPath, "data.bin"));
-			EditorUtility.RevealInFinder(Application.persistentDataPath);
 		}
 
 		private static IEnumerable YeildReturnLine(string path, int sheet)
