@@ -27,6 +27,13 @@ namespace Excel
                         yield return item;
                     }
                 }
+                else if (obj is string value)
+                {
+                    foreach (var item in JsonMapper.ToObject<List<T>>(value))
+                    {
+                        yield return item;
+                    }
+                }
             }
 
             void ImpHelper.Export(string savePath, Dictionary<int, List<Cell>> dic, string tableName)
