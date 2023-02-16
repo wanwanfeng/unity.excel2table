@@ -13,6 +13,12 @@ namespace Excel
     {
         public partial class Json : ImpHelper
         {
+            static Json()
+            {
+                LitJson.JsonMapper.RegisterImporter<double, float>(input => (float)input);
+                LitJson.JsonMapper.RegisterExporter<float>((v, w) => { w.Write(v); });
+            }
+
             public int count { get; set; }
             public string Extensions { get { return ".json"; } }
             IEnumerable ImpHelper.ProcessData<T>(object obj)
