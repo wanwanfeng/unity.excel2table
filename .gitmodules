@@ -1,4 +1,4 @@
 [submodule "Packages/com.custom.excel"]
 	path = Packages/com.custom.excel
-	url = git@gitee.com:wanwanfeng/unity.excel2table.git
+	url = ../unity.excel2table.git
 	branch = excel
